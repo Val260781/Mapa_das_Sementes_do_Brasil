@@ -10,3 +10,9 @@ O propjeto tem como objetivo, desenvolver uma plataforma digital colaborativa pa
 6. Validação Colaborativa → sistema de aprovação entre usuários
 7. Dashboard → métricas, estatísticas, gráficos
 8. PWA → transformar em app instalável no celular
+
+# Ferramentas utilizadas #
+- Visual Studio Code - versão 1.125.0 (programação em Go)
+- pgAdmin 4 (Banco de Dados)
+- Github (Armazenamento dos arquivos e progressão em parceria)
+- Postman (Testes da aplicação e funcionamento)
