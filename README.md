@@ -19,8 +19,6 @@ O **Mapa das Sementes do Brasil** é uma API REST desenvolvida em Go para docume
 | Validação Colaborativa | Avaliação por especialistas e comunidade |
 | Dashboard de Dados | Visualização e estatísticas da coleção |
 
----
-
 ## Stack Tecnológica - Ferramentas utilizadas para o desenvolvimento
 
 - **Linguagem:** Go 1.25
@@ -29,11 +27,11 @@ O **Mapa das Sementes do Brasil** é uma API REST desenvolvida em Go para docume
 - **Autenticação:** JWT (Bearer Token)
 - **Deploy:** Railway
 - **Containerização:** Docker
-- **VS Code 1.125.0: **IDE principal, com extensões Go (gopls, delve)
-- **pgAdmin 4: **Administração e modelagem do banco PostgreSQL
-- **GitHub: **Versionamento, histórico de etapas e colaboração
-- **Postman: **Testes dos endpoints REST com autenticação JWT
-- **Railway: **Deploy contínuo com variáveis de ambiente protegidas
+- **VS Code 1.125.0:** IDE principal, com extensões Go (gopls, delve)
+- **pgAdmin 4:** Administração e modelagem do banco PostgreSQL
+- **GitHub:** Versionamento, histórico de etapas e colaboração
+- **Postman:** Testes dos endpoints REST com autenticação JWT
+- **Railway:** Deploy contínuo com variáveis de ambiente protegidas
 
 ---
 
@@ -125,13 +123,11 @@ Authorization: Bearer eyJ...
 | `GET` | `/api/conhecimentos` | Conhecimentos tradicionais |
 | `POST` | `/api/avaliacoes` | Avaliar registro |
 
-> Documentação completa em [`docs/API.md`](docs/API.md)
-
 ---
 
 
 ## Contribuindo
-
+Em breve!!!
 Consulte o [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) para diretrizes de contribuição.
 
 ---
@@ -143,3 +139,6 @@ Este projeto é open source sob a licença MIT. Veja o arquivo `LICENSE` para ma
 ---
 
 > Desenvolvido para preservar a biodiversidade brasileira.
+
+---
+
