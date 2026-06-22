@@ -14,15 +14,39 @@ import (
 )
 
 type CadastroInput struct {
-	Nome          string `json:"nome" binding:"required"`
-	Email         string `json:"email" binding:"required"`
-	Senha         string `json:"senha" binding:"required"`
-	Role          string `json:"role"`
-	Especialidade string `json:"especialidade"`
-	RegistroProf  string `json:"registro_profissional"`
-	Estado        string `json:"estado"`
-	Municipio     string `json:"municipio"`
-	Bio           string `json:"bio"`
+	// --- Obrigatórios ---
+	NomeCompleto string `json:"nome_completo" binding:"required"`
+	Email        string `json:"email" binding:"required"`
+	Senha        string `json:"senha" binding:"required"`
+	Telefone     string `json:"telefone" binding:"required"`
+
+	// --- Dados pessoais ---
+	DataNascimento string `json:"data_nascimento"` // formato: "2000-01-25"
+	CPF            string `json:"cpf"`
+
+	// --- Localização ---
+	Estado    string `json:"estado"`
+	Municipio string `json:"municipio"`
+	Bairro    string `json:"bairro"`
+
+	// --- Atuação ---
+	Role            string `json:"role"` // artesao | pesquisador | especialista
+	Profissao       string `json:"profissao"`
+	Bioma           string `json:"bioma"`
+	LocalEncontro   string `json:"local_encontro"`
+	Experiencia     string `json:"experiencia"`
+	TempoAtuacao    string `json:"tempo_atuacao"`
+	TiposArtesanato string `json:"tipos_artesanato"`
+
+	// --- Especialista (só se role=especialista) ---
+	Especialidade      string `json:"especialidade"`
+	RegistroProf       string `json:"registro_profissional"`
+	InstituicaoVinculo string `json:"instituicao_vinculo"`
+
+	// --- Contato e perfil ---
+	RedesSociais string `json:"redes_sociais"`
+	SiteURL      string `json:"site_url"`
+	Bio          string `json:"bio"`
 }
 
 type LoginInput struct {
@@ -47,7 +71,7 @@ func Cadastro(c *gin.Context) {
 		return
 	}
 
-	// Verificar se e-mail já existe
+	// Verifica se e-mail já existe
 	var existe models.Usuario
 	if result := database.DB.Where("email = ?", input.Email).First(&existe); result.Error == nil {
 		utils.Error(c, 409, "E-mail já cadastrado")
@@ -61,7 +85,7 @@ func Cadastro(c *gin.Context) {
 		return
 	}
 
-	// Definir role
+	// Define role
 	role := models.RoleArtesao
 	if input.Role == "pesquisador" {
 		role = models.RolePesquisador
@@ -69,16 +93,51 @@ func Cadastro(c *gin.Context) {
 		role = models.RoleEspecialista
 	}
 
+	// Converte data de nascimento se informada
+	var dataNasc time.Time
+	if input.DataNascimento != "" {
+		dataNasc, err = time.Parse("2006-01-02", input.DataNascimento)
+		if err != nil {
+			utils.Error(c, 400, "Formato de data inválido. Use: AAAA-MM-DD (ex: 1990-05-20)")
+			return
+		}
+	}
+
 	usuario := models.Usuario{
-		Nome:          input.Nome,
-		Email:         input.Email,
-		Senha:         string(hash),
-		Role:          role,
-		Especialidade: input.Especialidade,
-		RegistroProf:  input.RegistroProf,
-		Estado:        input.Estado,
-		Municipio:     input.Municipio,
-		Bio:           input.Bio,
+		// Acesso
+		Email: input.Email,
+		Senha: string(hash),
+		Role:  role,
+		Ativo: true,
+
+		// Pessoais
+		NomeCompleto:   input.NomeCompleto,
+		DataNascimento: dataNasc,
+		Telefone:       input.Telefone,
+		CPF:            input.CPF,
+
+		// Localização
+		Estado:    input.Estado,
+		Municipio: input.Municipio,
+		Bairro:    input.Bairro,
+
+		// Atuação
+		Profissao:       input.Profissao,
+		Bioma:           input.Bioma,
+		LocalEncontro:   input.LocalEncontro,
+		Experiencia:     input.Experiencia,
+		TempoAtuacao:    input.TempoAtuacao,
+		TiposArtesanato: input.TiposArtesanato,
+
+		// Especialista
+		Especialidade:      input.Especialidade,
+		RegistroProf:       input.RegistroProf,
+		InstituicaoVinculo: input.InstituicaoVinculo,
+
+		// Contato
+		RedesSociais: input.RedesSociais,
+		SiteURL:      input.SiteURL,
+		Bio:          input.Bio,
 	}
 
 	if err := database.DB.Create(&usuario).Error; err != nil {
@@ -87,10 +146,12 @@ func Cadastro(c *gin.Context) {
 	}
 
 	utils.Success(c, 201, "Usuário cadastrado com sucesso!", gin.H{
-		"id":    usuario.ID,
-		"nome":  usuario.Nome,
-		"email": usuario.Email,
-		"role":  usuario.Role,
+		"id":            usuario.ID,
+		"nome_completo": usuario.NomeCompleto,
+		"email":         usuario.Email,
+		"role":          usuario.Role,
+		"municipio":     usuario.Municipio,
+		"estado":        usuario.Estado,
 	})
 }
 
@@ -112,7 +173,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Gerar JWT
+	// Gera JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"usuario_id": usuario.ID,
 		"role":       string(usuario.Role),
@@ -129,11 +190,12 @@ func Login(c *gin.Context) {
 		"token": tokenStr,
 		"usuario": gin.H{
 			"id":            usuario.ID,
-			"nome":          usuario.Nome,
+			"nome_completo": usuario.NomeCompleto,
 			"email":         usuario.Email,
 			"role":          usuario.Role,
 			"especialidade": usuario.Especialidade,
+			"municipio":     usuario.Municipio,
+			"estado":        usuario.Estado,
 		},
 	})
 }
-
