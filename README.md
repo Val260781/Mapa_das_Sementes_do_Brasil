@@ -139,6 +139,3 @@ Este projeto é open source sob a licença MIT. Veja o arquivo `LICENSE` para ma
 ---
 
 > Desenvolvido para preservar a biodiversidade brasileira.
-
----
-
