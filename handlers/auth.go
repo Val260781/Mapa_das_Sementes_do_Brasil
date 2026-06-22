@@ -137,14 +137,3 @@ func Login(c *gin.Context) {
 	})
 }
 
-func MeuPerfil(c *gin.Context) {
-	usuarioID, _ := c.Get("usuario_id")
-
-	var usuario models.Usuario
-	if err := database.DB.First(&usuario, usuarioID).Error; err != nil {
-		utils.Error(c, 404, "Usuário não encontrado")
-		return
-	}
-
-	utils.Success(c, 200, "Perfil encontrado", usuario)
-}
