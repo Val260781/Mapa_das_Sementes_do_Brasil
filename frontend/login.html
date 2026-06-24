@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrar — Mapa das Sementes do Brasil</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="navbar__logo" href="index.html">
+      🌱 <span>Mapa das Sementes</span> do Brasil
+    </a>
+    <ul class="navbar__nav">
+      <li><a href="index.html">Início</a></li>
+      <li><a href="cadastro.html">Cadastrar</a></li>
+    </ul>
+  </nav>
+
+  <!-- Formulário de login -->
+  <div class="auth-wrapper">
+    <div class="card auth-card">
+      <h1 class="auth-card__titulo">Bem-vindo de volta 🌿</h1>
+      <p class="auth-card__subtitulo">
+        Entre com sua conta para acessar o mapa e os registros.
+      </p>
+
+      <form id="form-login" novalidate>
+        <div class="form-grupo">
+          <label for="email">E-mail</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="seu@email.com"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="form-grupo">
+          <label for="senha">Senha</label>
+          <input
+            type="password"
+            id="senha"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <div id="msg-login" class="msg msg--erro"></div>
+
+        <button type="submit" class="btn btn--primario btn--bloco mt-2" id="btn-login">
+          Entrar
+        </button>
+      </form>
+
+      <p class="auth-card__rodape">
+        Não tem conta?
+        <a href="cadastro.html">Cadastre-se gratuitamente</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Se já estiver logado, redireciona direto para o mapa
+    if (estaLogado()) {
+      window.location.href = 'mapa.html';
+    }
+
+    const form = document.getElementById('form-login');
+    const btnLogin = document.getElementById('btn-login');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      ocultarMensagem('msg-login');
+
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+
+      if (!email || !senha) {
+        exibirMensagem('msg-login', 'Preencha e-mail e senha.', 'erro');
+        return;
+      }
+
+      estadoBotao(btnLogin, true);
+
+      try {
+        await apiLogin(email, senha);
+        // Login OK — redireciona para o mapa
+        window.location.href = 'mapa.html';
+      } catch (err) {
+        exibirMensagem('msg-login', err.message || 'Erro ao fazer login.', 'erro');
+      } finally {
+        estadoBotao(btnLogin, false, 'Entrar');
+      }
+    });
+  </script>
+
+</body>
+</html>

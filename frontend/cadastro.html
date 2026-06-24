@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro — Mapa das Sementes do Brasil</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="navbar__logo" href="index.html">
+      🌱 <span>Mapa das Sementes</span> do Brasil
+    </a>
+    <ul class="navbar__nav">
+      <li><a href="index.html">Início</a></li>
+      <li><a href="login.html">Entrar</a></li>
+    </ul>
+  </nav>
+
+  <!-- Formulário de cadastro -->
+  <div class="auth-wrapper">
+    <div class="card auth-card" style="max-width: 500px;">
+      <h1 class="auth-card__titulo">Criar conta 🌱</h1>
+      <p class="auth-card__subtitulo">
+        Junte-se à rede de guardiões das sementes nativas do Brasil.
+      </p>
+
+      <form id="form-cadastro" novalidate>
+        <div class="form-grupo">
+          <label for="nome">Nome completo</label>
+          <input
+            type="text"
+            id="nome"
+            placeholder="Seu nome"
+            autocomplete="name"
+            required
+          />
+        </div>
+
+        <div class="form-grupo">
+          <label for="email">E-mail</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="seu@email.com"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="form-grupo">
+          <label for="senha">Senha</label>
+          <input
+            type="password"
+            id="senha"
+            placeholder="Mínimo 6 caracteres"
+            autocomplete="new-password"
+            minlength="6"
+            required
+          />
+        </div>
+
+        <div class="form-grupo">
+          <label for="papel">Perfil de participação</label>
+          <select id="papel" required>
+            <option value="">Selecione seu perfil...</option>
+            <option value="artesao">🧵 Artesão(ã) — coleto ou trabalho com sementes</option>
+            <option value="pesquisador">🔬 Pesquisador(a) — estudo e analiso espécies</option>
+            <option value="especialista">✅ Especialista — valido informações técnicas</option>
+          </select>
+        </div>
+
+        <div id="msg-cadastro" class="msg"></div>
+
+        <button type="submit" class="btn btn--primario btn--bloco mt-2" id="btn-cadastro">
+          Criar minha conta
+        </button>
+      </form>
+
+      <p class="auth-card__rodape">
+        Já tem conta?
+        <a href="login.html">Entrar</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Se já estiver logado, redireciona
+    if (estaLogado()) {
+      window.location.href = 'mapa.html';
+    }
+
+    const form = document.getElementById('form-cadastro');
+    const btn  = document.getElementById('btn-cadastro');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      ocultarMensagem('msg-cadastro');
+
+      const nome  = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+      const papel = document.getElementById('papel').value;
+
+      // Validações básicas no front
+      if (!nome || !email || !senha || !papel) {
+        exibirMensagem('msg-cadastro', 'Preencha todos os campos.', 'erro');
+        return;
+      }
+      if (senha.length < 6) {
+        exibirMensagem('msg-cadastro', 'A senha precisa ter ao menos 6 caracteres.', 'erro');
+        return;
+      }
+
+      estadoBotao(btn, true);
+
+      try {
+        await apiCadastrar({ nome, email, senha, papel });
+
+        // Cadastro OK — faz login automático
+        exibirMensagem('msg-cadastro', '✅ Conta criada! Redirecionando...', 'sucesso');
+        await apiLogin(email, senha);
+        window.location.href = 'mapa.html';
+
+      } catch (err) {
+        exibirMensagem('msg-cadastro', err.message || 'Erro ao criar conta.', 'erro');
+      } finally {
+        estadoBotao(btn, false, 'Criar minha conta');
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa das Sementes do Brasil</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar__logo">
+      🌱 <span>Mapa das Sementes</span> do Brasil
+    </div>
+    <ul class="navbar__nav">
+      <li><a href="index.html">Início</a></li>
+      <li><a href="#" id="link-mapa">Mapa</a></li>
+      <li><a href="login.html">Entrar</a></li>
+      <li><a href="cadastro.html">Cadastrar</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <h1 class="hero__titulo">
+        Preservando as <span>sementes nativas</span><br>do Brasil
+      </h1>
+      <p class="hero__subtitulo">
+        Uma plataforma colaborativa para catalogar, mapear e proteger
+        as espécies nativas e o conhecimento tradicional dos povos do Brasil.
+      </p>
+      <div class="hero__acoes">
+        <a href="#" id="btn-explorar" class="btn btn--secundario" style="color: #d8f3dc; border-color: #52b788;">
+          🗺️ Explorar o Mapa
+        </a>
+        <a href="cadastro.html" class="btn btn--primario" style="background: #52b788; color: #1b1b1b;">
+          Participar do projeto
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Estatísticas da API -->
+  <section class="container">
+    <div class="stats" id="stats-container">
+      <div class="stat-card">
+        <div class="stat-card__numero" id="stat-sementes">—</div>
+        <div class="stat-card__label">Espécies cadastradas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__numero" id="stat-registros">—</div>
+        <div class="stat-card__label">Ocorrências mapeadas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__numero" id="stat-estados">—</div>
+        <div class="stat-card__label">Estados com registros</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__numero" id="stat-usuarios">—</div>
+        <div class="stat-card__label">Colaboradores</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sobre o projeto -->
+  <section style="padding: 3rem 0; background: #fff;">
+    <div class="container">
+      <h2 style="color: var(--verde-escuro); font-size: 1.6rem; margin-bottom: 1rem;">
+        O que é o projeto?
+      </h2>
+      <p style="color: var(--texto-suave); max-width: 720px; line-height: 1.8;">
+        O <strong>Mapa das Sementes do Brasil</strong> é uma iniciativa colaborativa que reúne
+        artesãos, pesquisadores e especialistas em um banco de dados aberto de espécies nativas.
+        Cada registro inclui geolocalização, fotos, informações botânicas e o conhecimento
+        tradicional associado à semente.
+      </p>
+      <div style="display: flex; gap: 2rem; margin-top: 2rem; flex-wrap: wrap;">
+        <div>
+          <strong style="color: var(--verde-escuro);">🌿 Para artesãos</strong>
+          <p style="color: var(--texto-suave); font-size: 0.9rem; margin-top: 0.3rem;">
+            Registre e compartilhe seu conhecimento sobre sementes locais.
+          </p>
+        </div>
+        <div>
+          <strong style="color: var(--verde-escuro);">🔬 Para pesquisadores</strong>
+          <p style="color: var(--texto-suave); font-size: 0.9rem; margin-top: 0.3rem;">
+            Acesse dados georreferenciados e contribua com análises científicas.
+          </p>
+        </div>
+        <div>
+          <strong style="color: var(--verde-escuro);">✅ Para especialistas</strong>
+          <p style="color: var(--texto-suave); font-size: 0.9rem; margin-top: 0.3rem;">
+            Valide registros e garanta a qualidade das informações na plataforma.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rodapé -->
+  <footer style="background: var(--verde-escuro); color: var(--verde-suave); text-align: center; padding: 1.5rem; font-size: 0.85rem; margin-top: 4rem;">
+    © 2025 Mapa das Sementes do Brasil · Desenvolvido com Go + PostgreSQL
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Redireciona usuários já logados para o mapa
+    document.addEventListener('DOMContentLoaded', () => {
+      if (estaLogado()) {
+        document.getElementById('link-mapa').href = 'mapa.html';
+        document.getElementById('btn-explorar').href = 'mapa.html';
+      }
+
+      // Carrega estatísticas da API
+      carregarStats();
+    });
+
+    async function carregarStats() {
+      try {
+        // Endpoint de stats (Etapa 4 — /api/registros/stats)
+        const dados = await requisicao('/api/registros/stats', 'GET', null, true);
+        document.getElementById('stat-registros').textContent =
+          dados.total_registros ?? '—';
+        document.getElementById('stat-estados').textContent =
+          dados.total_estados ?? '—';
+      } catch (_) {
+        // Silencioso: stats são exibição, não funcionalidade crítica
+      }
+
+      try {
+        const sementes = await apiListarSementes();
+        document.getElementById('stat-sementes').textContent =
+          Array.isArray(sementes) ? sementes.length : '—';
+      } catch (_) {}
+    }
+  </script>
+
+</body>
+</html>

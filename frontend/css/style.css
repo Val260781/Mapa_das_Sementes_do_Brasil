@@ -1,0 +1,347 @@
+/* =============================================
+   Mapa das Sementes do Brasil — Estilos Globais
+   ============================================= */
+
+/* --- Variáveis --- */
+:root {
+  --verde-escuro:  #2d6a4f;
+  --verde-medio:   #40916c;
+  --verde-claro:   #52b788;
+  --verde-suave:   #d8f3dc;
+  --terra:         #f8f5f0;
+  --terra-escura:  #e9e2d8;
+  --texto:         #1b1b1b;
+  --texto-suave:   #555550;
+  --branco:        #ffffff;
+  --erro:          #c0392b;
+  --sucesso:       #27ae60;
+  --sombra:        0 2px 12px rgba(0, 0, 0, 0.08);
+  --raio:          10px;
+  --raio-lg:       16px;
+  --transicao:     0.2s ease;
+}
+
+/* --- Reset base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background-color: var(--terra);
+  color: var(--texto);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: var(--verde-medio);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* --- Navbar --- */
+.navbar {
+  background-color: var(--verde-escuro);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 62px;
+  box-shadow: var(--sombra);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar__logo {
+  color: var(--branco);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar__logo span {
+  color: var(--verde-claro);
+}
+
+.navbar__nav {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+}
+
+.navbar__nav a {
+  color: var(--verde-suave);
+  font-size: 0.95rem;
+  transition: color var(--transicao);
+}
+
+.navbar__nav a:hover {
+  color: var(--branco);
+  text-decoration: none;
+}
+
+/* --- Container central --- */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* --- Botões --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: var(--raio);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transicao), opacity var(--transicao);
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--primario {
+  background-color: var(--verde-escuro);
+  color: var(--branco);
+}
+
+.btn--primario:hover:not(:disabled) {
+  background-color: var(--verde-medio);
+}
+
+.btn--secundario {
+  background-color: transparent;
+  color: var(--verde-escuro);
+  border: 2px solid var(--verde-escuro);
+}
+
+.btn--secundario:hover:not(:disabled) {
+  background-color: var(--verde-suave);
+}
+
+.btn--bloco {
+  width: 100%;
+  padding: 0.75rem;
+}
+
+/* --- Card --- */
+.card {
+  background: var(--branco);
+  border-radius: var(--raio-lg);
+  box-shadow: var(--sombra);
+  padding: 2rem;
+}
+
+/* --- Formulários --- */
+.form-grupo {
+  margin-bottom: 1.2rem;
+}
+
+.form-grupo label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  margin-bottom: 0.4rem;
+}
+
+.form-grupo input,
+.form-grupo select,
+.form-grupo textarea {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid var(--terra-escura);
+  border-radius: var(--raio);
+  font-size: 0.95rem;
+  color: var(--texto);
+  background: var(--terra);
+  transition: border-color var(--transicao);
+  outline: none;
+}
+
+.form-grupo input:focus,
+.form-grupo select:focus,
+.form-grupo textarea:focus {
+  border-color: var(--verde-medio);
+  background: var(--branco);
+}
+
+/* --- Mensagens de feedback --- */
+.msg {
+  padding: 0.7rem 1rem;
+  border-radius: var(--raio);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  display: none;
+}
+
+.msg--erro {
+  background: #fdecea;
+  color: var(--erro);
+  border-left: 4px solid var(--erro);
+}
+
+.msg--sucesso {
+  background: #eafaf1;
+  color: var(--sucesso);
+  border-left: 4px solid var(--sucesso);
+}
+
+.msg.visivel {
+  display: block;
+}
+
+/* --- Hero (página inicial) --- */
+.hero {
+  background: linear-gradient(135deg, var(--verde-escuro) 0%, var(--verde-medio) 100%);
+  color: var(--branco);
+  padding: 5rem 1.5rem;
+  text-align: center;
+}
+
+.hero__titulo {
+  font-size: 2.4rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.hero__titulo span {
+  color: var(--verde-claro);
+}
+
+.hero__subtitulo {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+.hero__acoes {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* --- Seção de estatísticas --- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  padding: 3rem 0;
+}
+
+.stat-card {
+  background: var(--branco);
+  border-radius: var(--raio-lg);
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: var(--sombra);
+  border-top: 4px solid var(--verde-claro);
+}
+
+.stat-card__numero {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--verde-escuro);
+}
+
+.stat-card__label {
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+  margin-top: 0.3rem;
+}
+
+/* --- Página de autenticação (login/cadastro) --- */
+.auth-wrapper {
+  min-height: calc(100vh - 62px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+}
+
+.auth-card__titulo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--verde-escuro);
+  margin-bottom: 0.3rem;
+}
+
+.auth-card__subtitulo {
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+  margin-bottom: 1.8rem;
+}
+
+.auth-card__rodape {
+  text-align: center;
+  margin-top: 1.2rem;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+/* --- Spinner de carregamento --- */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: var(--branco);
+  border-radius: 50%;
+  animation: girar 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Utilitários --- */
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.texto-centro { text-align: center; }
+.oculto { display: none !important; }
+
+/* --- Responsivo --- */
+@media (max-width: 600px) {
+  .hero__titulo { font-size: 1.8rem; }
+  .navbar { padding: 0 1rem; }
+  .navbar__nav { gap: 1rem; }
+}
