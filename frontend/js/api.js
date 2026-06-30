@@ -84,8 +84,9 @@ async function requisicao(rota, metodo = 'GET', corpo = null, publico = false) {
   const dados = await resposta.json();
 
   if (!resposta.ok) {
-    // A API Go retorna { "error": "mensagem" }
-    throw new Error(dados.error || `Erro ${resposta.status}`);
+    // O backend retorna { success: false, message: "..." } (utils.Error)
+    // Alguns handlers mais antigos usam { erro: "..." } — cobrimos os dois.
+    throw new Error(dados.message || dados.erro || dados.error || `Erro ${resposta.status}`);
   }
 
   return dados;
