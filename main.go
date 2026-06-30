@@ -100,13 +100,23 @@ func main() {
 		protegido.PUT("/conhecimentos/:id", handlers.EditarConhecimento)
 		protegido.DELETE("/conhecimentos/:id", handlers.DeletarConhecimento)
 		protegido.POST("/conhecimentos/:id/curtir", handlers.CurtirConhecimento)
-		protegido.POST("/conhecimentos/:id/validar", handlers.ValidarConhecimento)
 
 		// Avaliações
 		protegido.POST("/avaliacoes/especie/:id", handlers.AvaliarEspecie)
 		protegido.POST("/avaliacoes/semente/:id", handlers.AvaliarSemente)
 		protegido.GET("/avaliacoes/pendentes", handlers.ListarPendentes)
 		protegido.GET("/avaliacoes/historico", handlers.HistoricoAvaliacoes)
+
+		// Especialista — validação de conteúdo (especialista ou admin)
+		especialista := protegido.Group("/")
+		especialista.Use(middleware.RoleRequired("especialista", "admin"))
+		{
+			especialista.POST("/conhecimentos/:id/validar", handlers.ValidarConhecimento)
+			especialista.POST("/especies/:id/validar", handlers.ValidarEspecie)
+			especialista.POST("/sementes/:id/validar", handlers.ValidarSemente)
+			especialista.POST("/registros/:id/validar", handlers.ValidarRegistro)
+			especialista.POST("/registros/:id/rejeitar", handlers.RejeitarRegistro)
+		}
 
 		// Admin
 		admin := protegido.Group("/admin")
@@ -115,6 +125,9 @@ func main() {
 			admin.GET("/usuarios", handlers.ListarUsuarios)
 			admin.PUT("/usuarios/:id", handlers.AdminEditarUsuario)
 			admin.DELETE("/usuarios/:id", handlers.AdminExcluirUsuario)
+			admin.DELETE("/especies/:id", handlers.AdminExcluirEspecie)
+			admin.DELETE("/sementes/:id", handlers.AdminExcluirSemente)
+			admin.DELETE("/registros/:id", handlers.AdminExcluirRegistro)
 		}
 	}
 
