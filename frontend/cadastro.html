@@ -29,10 +29,10 @@
 
       <form id="form-cadastro" novalidate>
         <div class="form-grupo">
-          <label for="nome">Nome completo</label>
+          <label for="nome_completo">Nome completo</label>
           <input
             type="text"
-            id="nome"
+            id="nome_completo"
             placeholder="Seu nome"
             autocomplete="name"
             required
@@ -51,6 +51,17 @@
         </div>
 
         <div class="form-grupo">
+          <label for="telefone">Telefone</label>
+          <input
+            type="tel"
+            id="telefone"
+            placeholder="(62) 99999-9999"
+            autocomplete="tel"
+            required
+          />
+        </div>
+
+        <div class="form-grupo">
           <label for="senha">Senha</label>
           <input
             type="password"
@@ -63,8 +74,8 @@
         </div>
 
         <div class="form-grupo">
-          <label for="papel">Perfil de participação</label>
-          <select id="papel" required>
+          <label for="role">Perfil de participação</label>
+          <select id="role" required>
             <option value="">Selecione seu perfil...</option>
             <option value="artesao">🧵 Artesão(ã) — coleto ou trabalho com sementes</option>
             <option value="pesquisador">🔬 Pesquisador(a) — estudo e analiso espécies</option>
@@ -100,13 +111,14 @@
       e.preventDefault();
       ocultarMensagem('msg-cadastro');
 
-      const nome  = document.getElementById('nome').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const senha = document.getElementById('senha').value;
-      const papel = document.getElementById('papel').value;
+      const nome_completo = document.getElementById('nome_completo').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const telefone = document.getElementById('telefone').value.trim();
+      const senha    = document.getElementById('senha').value;
+      const role     = document.getElementById('role').value;
 
       // Validações básicas no front
-      if (!nome || !email || !senha || !papel) {
+      if (!nome_completo || !email || !telefone || !senha || !role) {
         exibirMensagem('msg-cadastro', 'Preencha todos os campos.', 'erro');
         return;
       }
@@ -118,7 +130,7 @@
       estadoBotao(btn, true);
 
       try {
-        await apiCadastrar({ nome, email, senha, papel });
+        await apiCadastrar({ nome_completo, email, telefone, senha, role });
 
         // Cadastro OK — faz login automático
         exibirMensagem('msg-cadastro', '✅ Conta criada! Redirecionando...', 'sucesso');
