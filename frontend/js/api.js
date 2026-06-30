@@ -284,10 +284,12 @@ function estadoBotao(btn, carregando, textoOriginal = '') {
 
 function formatarPapel(papel) {
   const papeis = {
-    artesao:      'Artesão(ã)',
-    pesquisador:  'Pesquisador(a)',
-    especialista: 'Especialista',
-    admin:        'Administrador(a)',
+    artesao:            'Artesão(ã)',
+    pesquisador:        'Pesquisador(a)',
+    especialista:       'Especialista',
+    estudante:          'Estudante',
+    agente_territorial: 'Agente Territorial Cultural',
+    admin:              'Administrador(a)',
   };
   return papeis[papel] || papel;
 }
