@@ -268,6 +268,24 @@ async function apiMinhasContribuicoes() {
 }
 
 /* -----------------------------------------------
+   Administração de usuários (somente role=admin)
+----------------------------------------------- */
+
+/**
+ * Edita dados de qualquer usuário, incluindo reset de senha e correção de e-mail.
+ * @param {number} id
+ * @param {object} dados - { email, nova_senha, nome_completo, telefone, role, estado, municipio, ativo }
+ */
+async function apiAdminEditarUsuario(id, dados) {
+  return await requisicao(`/api/admin/usuarios/${id}`, 'PUT', dados);
+}
+
+/** Exclui definitivamente um usuário (libera o e-mail para novo cadastro). */
+async function apiAdminExcluirUsuario(id) {
+  return await requisicao(`/api/admin/usuarios/${id}`, 'DELETE');
+}
+
+/* -----------------------------------------------
    Conhecimento Tradicional
 ----------------------------------------------- */
 
