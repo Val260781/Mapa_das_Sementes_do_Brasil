@@ -28,7 +28,7 @@ func main() {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "ok",
-			"message": " Mapa das Sementes do Brasil — API rodando!",
+			"message": "🌱 Mapa das Sementes do Brasil — API rodando!",
 		})
 	})
 
@@ -113,6 +113,8 @@ func main() {
 		admin.Use(middleware.RoleRequired("admin"))
 		{
 			admin.GET("/usuarios", handlers.ListarUsuarios)
+			admin.PUT("/usuarios/:id", handlers.AdminEditarUsuario)
+			admin.DELETE("/usuarios/:id", handlers.AdminExcluirUsuario)
 		}
 	}
 
