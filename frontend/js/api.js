@@ -96,14 +96,18 @@ async function requisicao(rota, metodo = 'GET', corpo = null, publico = false) {
 ----------------------------------------------- */
 
 async function apiLogin(email, senha) {
-  const dados = await requisicao('/api/auth/login', 'POST', { email, senha }, true);
+  const resposta = await requisicao('/api/auth/login', 'POST', { email, senha }, true);
+  // O backend retorna { message, data: { token, usuario } }
+  const dados = resposta.data || resposta;
   salvarSessao(dados.token, dados.usuario);
   return dados;
 }
 
 // Rota real no main.go: POST /api/auth/cadastro
+// Campos obrigatórios no backend: nome_completo, email, senha, telefone
 async function apiCadastrar(usuario) {
-  return await requisicao('/api/auth/cadastro', 'POST', usuario, true);
+  const resposta = await requisicao('/api/auth/cadastro', 'POST', usuario, true);
+  return resposta.data || resposta;
 }
 
 /* -----------------------------------------------
