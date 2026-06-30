@@ -9,10 +9,12 @@ import (
 type RoleUsuario string
 
 const (
-	RoleArtesao      RoleUsuario = "artesao"
-	RolePesquisador  RoleUsuario = "pesquisador"
-	RoleEspecialista RoleUsuario = "especialista"
-	RoleAdmin        RoleUsuario = "admin"
+	RoleArtesao           RoleUsuario = "artesao"
+	RolePesquisador       RoleUsuario = "pesquisador"
+	RoleEspecialista      RoleUsuario = "especialista"
+	RoleEstudante         RoleUsuario = "estudante"
+	RoleAgenteTerritorial RoleUsuario = "agente_territorial"
+	RoleAdmin             RoleUsuario = "admin"
 )
 
 type Usuario struct {
@@ -39,7 +41,9 @@ type Usuario struct {
 	Bairro    string `gorm:"size:150" json:"bairro"`
 
 	// --- Atuação no projeto ---
-	Profissao       string `gorm:"size:150" json:"profissao"`         // Ex: Artesã, Biólogo, Agricultor
+	// Profissao também é usado para o curso, no caso de role=estudante
+	// (ex: "Engenharia Florestal - UFG"), evitando precisar de coluna nova.
+	Profissao       string `gorm:"size:150" json:"profissao"`         // Ex: Artesã, Biólogo, Agricultor, ou Curso (se estudante)
 	Bioma           string `gorm:"size:100" json:"bioma"`             // Ex: Cerrado, Amazônia, Caatinga
 	LocalEncontro   string `gorm:"type:text" json:"local_encontro"`   // Descrição livre de onde encontra sementes
 	Experiencia     string `gorm:"type:text" json:"experiencia"`      // Experiência com sementes/artesanato
