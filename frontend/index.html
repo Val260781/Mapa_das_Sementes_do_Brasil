@@ -116,8 +116,13 @@
         const navLista = document.querySelector('.navbar__nav');
 
         // Remove o link "Entrar" e "Cadastrar" da navbar, adiciona saudação + sair
+        const linkAdmin = usuario?.role === 'admin'
+          ? '<li><a href="/frontend/admin.html" style="color: #d8f3dc;">⚙️ Admin</a></li>'
+          : '';
+
         navLista.innerHTML = `
           <li><a href="/frontend/index.html">Início</a></li>
+          ${linkAdmin}
           <li style="color: #d8f3dc;">Olá, ${usuario?.nome_completo?.split(' ')[0] || 'visitante'} 👋</li>
           <li><a href="#" id="link-sair">Sair</a></li>
         `;
