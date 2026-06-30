@@ -1,395 +1,314 @@
-/* =============================================
-   Mapa das Sementes do Brasil — API Client
-   Camada de comunicação com o backend Go/Gin
-   ============================================= */
-
-// Detecta automaticamente o ambiente:
-// - Em produção (Railway): frontend e API no mesmo domínio → string vazia
-// - Em desenvolvimento local: aponta para Go na porta 8080
-const API_BASE = (
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1'
-) ? 'http://localhost:8080' : '';
-
-// Chaves usadas para guardar sessão no localStorage
-const TOKEN_KEY   = 'msb_token';
-const USUARIO_KEY = 'msb_usuario';
-
-/* -----------------------------------------------
-   Gestão de sessão / JWT
------------------------------------------------ */
-
-function salvarSessao(token, usuario) {
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(USUARIO_KEY, JSON.stringify(usuario));
-}
-
-function obterToken() {
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-function obterUsuario() {
-  const dados = localStorage.getItem(USUARIO_KEY);
-  return dados ? JSON.parse(dados) : null;
-}
-
-function encerrarSessao() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USUARIO_KEY);
-  window.location.href = '/frontend/login.html';
-}
-
-function estaLogado() {
-  return !!obterToken();
-}
-
-/** Redireciona para login se não houver sessão. Use no topo de páginas protegidas. */
-function exigirLogin() {
-  if (!estaLogado()) {
-    window.location.href = '/frontend/login.html';
-  }
-}
-
-/* -----------------------------------------------
-   Função base de requisição HTTP
------------------------------------------------ */
-
-/**
- * @param {string}      rota    - ex: '/api/sementes'
- * @param {string}      metodo  - GET | POST | PUT | DELETE
- * @param {object|null} corpo   - body JSON (opcional)
- * @param {boolean}     publico - se true, não envia Authorization
- */
-async function requisicao(rota, metodo = 'GET', corpo = null, publico = false) {
-  const headers = { 'Content-Type': 'application/json' };
-
-  if (!publico) {
-    const token = obterToken();
-    if (!token) {
-      encerrarSessao();
-      throw new Error('Sessão expirada. Faça login novamente.');
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sementes Cadastradas — Mapa das Sementes do Brasil</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .filtros-barra {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+      align-items: center;
     }
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const opcoes = { method: metodo, headers };
-  if (corpo && metodo !== 'GET') {
-    opcoes.body = JSON.stringify(corpo);
-  }
-
-  const resposta = await fetch(`${API_BASE}${rota}`, opcoes);
-
-  if (resposta.status === 204) return null;
-
-  const dados = await resposta.json();
-
-  if (!resposta.ok) {
-    // O backend retorna { success: false, message: "..." } (utils.Error)
-    // Alguns handlers mais antigos usam { erro: "..." } — cobrimos os dois.
-    throw new Error(dados.message || dados.erro || dados.error || `Erro ${resposta.status}`);
-  }
-
-  return dados;
-}
-
-/* -----------------------------------------------
-   Autenticação
------------------------------------------------ */
-
-async function apiLogin(email, senha) {
-  const resposta = await requisicao('/api/auth/login', 'POST', { email, senha }, true);
-  // O backend retorna { message, data: { token, usuario } }
-  const dados = resposta.data || resposta;
-  salvarSessao(dados.token, dados.usuario);
-  return dados;
-}
-
-// Rota real no main.go: POST /api/auth/cadastro
-// Campos obrigatórios no backend: nome_completo, email, senha, telefone
-async function apiCadastrar(usuario) {
-  const resposta = await requisicao('/api/auth/cadastro', 'POST', usuario, true);
-  return resposta.data || resposta;
-}
-
-/* -----------------------------------------------
-   Espécies (públicas)
------------------------------------------------ */
-
-async function apiListarEspecies() {
-  return await requisicao('/api/especies', 'GET', null, true);
-}
-
-async function apiDetalheEspecie(id) {
-  return await requisicao(`/api/especies/${id}`, 'GET', null, true);
-}
-
-async function apiCriarEspecie(dados) {
-  return await requisicao('/api/especies', 'POST', dados);
-}
-
-async function apiEditarEspecie(id, dados) {
-  return await requisicao(`/api/especies/${id}`, 'PUT', dados);
-}
-
-async function apiDeletarEspecie(id) {
-  return await requisicao(`/api/especies/${id}`, 'DELETE');
-}
-
-/* -----------------------------------------------
-   Sementes (públicas para leitura)
------------------------------------------------ */
-
-async function apiListarSementes() {
-  return await requisicao('/api/sementes', 'GET', null, true);
-}
-
-async function apiDetalheSemente(id) {
-  return await requisicao(`/api/sementes/${id}`, 'GET', null, true);
-}
-
-async function apiCriarSemente(dados) {
-  return await requisicao('/api/sementes', 'POST', dados);
-}
-
-async function apiEditarSemente(id, dados) {
-  return await requisicao(`/api/sementes/${id}`, 'PUT', dados);
-}
-
-async function apiDeletarSemente(id) {
-  return await requisicao(`/api/sementes/${id}`, 'DELETE');
-}
-
-/* -----------------------------------------------
-   Registros / Mapa
------------------------------------------------ */
-
-/** Pontos para o Leaflet — rota pública: GET /api/registros/mapa */
-async function apiRegistrosMapa() {
-  return await requisicao('/api/registros/mapa', 'GET', null, true);
-}
-
-async function apiListarRegistros() {
-  return await requisicao('/api/registros', 'GET', null, true);
-}
-
-async function apiDetalheRegistro(id) {
-  return await requisicao(`/api/registros/${id}`, 'GET', null, true);
-}
-
-async function apiCriarRegistro(dados) {
-  return await requisicao('/api/registros', 'POST', dados);
-}
-
-async function apiEditarRegistro(id, dados) {
-  return await requisicao(`/api/registros/${id}`, 'PUT', dados);
-}
-
-async function apiDeletarRegistro(id) {
-  return await requisicao(`/api/registros/${id}`, 'DELETE');
-}
-
-/**
- * Envia até 5 fotos para um registro (multipart/form-data).
- * Rota real: POST /api/registros/:id/fotos — campo "fotos" (plural), máx. 5 arquivos.
- * @param {number} registroId
- * @param {File[]} arquivos - lista de arquivos de imagem
- * @param {string} legenda - legenda opcional aplicada às fotos
- */
-async function apiUploadFotosRegistro(registroId, arquivos, legenda = '') {
-  const token = obterToken();
-  if (!token) {
-    encerrarSessao();
-    throw new Error('Sessão expirada. Faça login novamente.');
-  }
-
-  const formData = new FormData();
-  arquivos.forEach(arquivo => formData.append('fotos', arquivo));
-  if (legenda) formData.append('legenda', legenda);
-
-  const resposta = await fetch(`${API_BASE}/api/registros/${registroId}/fotos`, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }, // sem Content-Type: o browser define o boundary
-    body: formData,
-  });
-
-  const dados = await resposta.json();
-  if (!resposta.ok) {
-    throw new Error(dados.message || dados.erro || dados.error || `Erro ${resposta.status}`);
-  }
-  return dados.data || dados;
-}
-
-/* -----------------------------------------------
-   Busca avançada (pública) — /api/busca/...
------------------------------------------------ */
-
-/** Estatísticas gerais — usadas na home */
-async function apiEstatisticas() {
-  return await requisicao('/api/busca/estatisticas', 'GET', null, true);
-}
-
-/** Busca por proximidade geográfica */
-async function apiBuscaProximidade(lat, lng, raioKm) {
-  return await requisicao(
-    `/api/busca/mapa?lat=${lat}&lng=${lng}&raio=${raioKm}`,
-    'GET', null, true
-  );
-}
-
-/** Busca por estado (UF) */
-async function apiBuscaPorEstado(uf) {
-  return await requisicao(`/api/busca/estado/${uf}`, 'GET', null, true);
-}
-
-/** Busca geral por termo */
-async function apiBuscaGeral(termo) {
-  return await requisicao(`/api/busca?q=${encodeURIComponent(termo)}`, 'GET', null, true);
-}
-
-/** Busca de espécies por nome */
-async function apiBuscaEspecies(termo) {
-  return await requisicao(`/api/busca/especies?q=${encodeURIComponent(termo)}`, 'GET', null, true);
-}
-
-/* -----------------------------------------------
-   Perfil (autenticado)
------------------------------------------------ */
-
-async function apiMeuPerfil() {
-  return await requisicao('/api/perfil');
-}
-
-async function apiEditarPerfil(dados) {
-  return await requisicao('/api/perfil', 'PUT', dados);
-}
-
-async function apiMinhasContribuicoes() {
-  return await requisicao('/api/perfil/contribuicoes');
-}
-
-/* -----------------------------------------------
-   Administração de usuários (somente role=admin)
------------------------------------------------ */
-
-/**
- * Edita dados de qualquer usuário, incluindo reset de senha e correção de e-mail.
- * @param {number} id
- * @param {object} dados - { email, nova_senha, nome_completo, telefone, role, estado, municipio, ativo }
- */
-async function apiAdminEditarUsuario(id, dados) {
-  return await requisicao(`/api/admin/usuarios/${id}`, 'PUT', dados);
-}
-
-/** Exclui definitivamente um usuário (libera o e-mail para novo cadastro). */
-async function apiAdminExcluirUsuario(id) {
-  return await requisicao(`/api/admin/usuarios/${id}`, 'DELETE');
-}
-
-/* -----------------------------------------------
-   Conhecimento Tradicional
------------------------------------------------ */
-
-async function apiListarConhecimentos() {
-  return await requisicao('/api/conhecimentos', 'GET', null, true);
-}
-
-async function apiDetalheConhecimento(id) {
-  return await requisicao(`/api/conhecimentos/${id}`, 'GET', null, true);
-}
-
-async function apiCriarConhecimento(dados) {
-  return await requisicao('/api/conhecimentos', 'POST', dados);
-}
-
-async function apiCurtirConhecimento(id) {
-  return await requisicao(`/api/conhecimentos/${id}/curtir`, 'POST');
-}
-
-async function apiValidarConhecimento(id) {
-  return await requisicao(`/api/conhecimentos/${id}/validar`, 'POST');
-}
-
-/* -----------------------------------------------
-   Validação (especialista ou admin)
------------------------------------------------ */
-
-async function apiValidarEspecie(id) {
-  return await requisicao(`/api/especies/${id}/validar`, 'POST');
-}
-
-async function apiValidarSemente(id) {
-  return await requisicao(`/api/sementes/${id}/validar`, 'POST');
-}
-
-async function apiValidarRegistro(id) {
-  return await requisicao(`/api/registros/${id}/validar`, 'POST');
-}
-
-async function apiRejeitarRegistro(id) {
-  return await requisicao(`/api/registros/${id}/rejeitar`, 'POST');
-}
-
-/* -----------------------------------------------
-   Exclusão administrativa (somente admin)
------------------------------------------------ */
-
-async function apiAdminExcluirEspecie(id) {
-  return await requisicao(`/api/admin/especies/${id}`, 'DELETE');
-}
-
-async function apiAdminExcluirSemente(id) {
-  return await requisicao(`/api/admin/sementes/${id}`, 'DELETE');
-}
-
-async function apiAdminExcluirRegistro(id) {
-  return await requisicao(`/api/admin/registros/${id}`, 'DELETE');
-}
-
-/* -----------------------------------------------
-   Utilitários de UI
------------------------------------------------ */
-
-function exibirMensagem(seletorId, texto, tipo = 'erro') {
-  const el = document.getElementById(seletorId);
-  if (!el) return;
-  el.textContent = texto;
-  el.className = `msg msg--${tipo} visivel`;
-}
-
-/**
- * Exibe uma mensagem de erro com um link de ação (ex: "Fazer login").
- * @param {string} seletorId
- * @param {string} texto
- * @param {string} href
- * @param {string} textoLink
- */
-function exibirMensagemComLink(seletorId, texto, href, textoLink) {
-  const el = document.getElementById(seletorId);
-  if (!el) return;
-  el.innerHTML = `${texto} <a href="${href}" style="font-weight: 700; text-decoration: underline;">${textoLink}</a>`;
-  el.className = 'msg msg--erro visivel';
-}
-
-function ocultarMensagem(seletorId) {
-  const el = document.getElementById(seletorId);
-  if (el) el.classList.remove('visivel');
-}
-
-function estadoBotao(btn, carregando, textoOriginal = '') {
-  btn.disabled = carregando;
-  btn.innerHTML = carregando
-    ? '<span class="spinner"></span>'
-    : textoOriginal;
-}
-
-function formatarPapel(papel) {
-  const papeis = {
-    artesao:            'Artesão(ã)',
-    pesquisador:        'Pesquisador(a)',
-    especialista:       'Especialista',
-    estudante:          'Estudante',
-    agente_territorial: 'Agente Territorial Cultural',
-    admin:              'Administrador(a)',
-  };
-  return papeis[papel] || papel;
-}
+    .filtros-barra select,
+    .filtros-barra input {
+      width: auto;
+      min-width: 160px;
+    }
+    .registro-card {
+      background: var(--branco);
+      border-radius: var(--raio-lg);
+      box-shadow: var(--sombra);
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .registro-card__foto {
+      width: 100px;
+      height: 100px;
+      border-radius: var(--raio);
+      object-fit: cover;
+      background: var(--terra-escura);
+      flex-shrink: 0;
+    }
+    .registro-card__corpo {
+      flex: 1;
+      min-width: 200px;
+    }
+    .registro-card__titulo {
+      font-weight: 700;
+      color: var(--verde-escuro);
+      font-size: 1.05rem;
+    }
+    .registro-card__cientifico {
+      font-style: italic;
+      color: var(--texto-suave);
+      font-size: 0.85rem;
+    }
+    .registro-card__meta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--texto-suave);
+    }
+    .badge-status {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .badge-status--pendente { background: #fff3cd; color: #8a6500; }
+    .badge-status--aprovado { background: var(--verde-suave); color: var(--verde-escuro); }
+    .badge-status--rejeitado { background: #fdecea; color: var(--erro); }
+    .registro-card__acoes {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      justify-content: center;
+    }
+    .btn-mini {
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: var(--raio);
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-mini--aprovar { background: var(--verde-claro); color: var(--branco); }
+    .btn-mini--rejeitar { background: #fdecea; color: var(--erro); }
+    .btn-mini--excluir { background: var(--terra-escura); color: var(--texto); }
+    .abas {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--terra-escura);
+      margin-bottom: 1.5rem;
+    }
+    .aba {
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+      color: var(--texto-suave);
+      font-weight: 600;
+      font-size: 0.9rem;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+    .aba.ativa {
+      color: var(--verde-escuro);
+      border-bottom-color: var(--verde-escuro);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="navbar__logo" href="/frontend/index.html">
+      🌱 <span>Mapa das Sementes</span> do Brasil
+    </a>
+    <ul class="navbar__nav">
+      <li><a href="/frontend/index.html">Início</a></li>
+      <li><a href="/frontend/cadastro-semente.html">Cadastrar semente</a></li>
+      <li><a href="#" id="link-sair">Sair</a></li>
+    </ul>
+  </nav>
+
+  <div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+
+    <h1 style="color: var(--verde-escuro); font-size: 1.6rem;">
+      🌳 Sementes cadastradas
+    </h1>
+    <p style="color: var(--texto-suave); margin-top: 0.3rem;" id="subtitulo-papel">
+      Acompanhe os registros de sementes da plataforma.
+    </p>
+
+    <!-- Abas de status -->
+    <div class="abas">
+      <div class="aba ativa" data-status="todos">Todos</div>
+      <div class="aba" data-status="pendente">Pendentes</div>
+      <div class="aba" data-status="aprovado">Aprovados</div>
+      <div class="aba" data-status="rejeitado">Rejeitados</div>
+    </div>
+
+    <div class="filtros-barra">
+      <input type="text" id="busca" placeholder="🔍 Buscar por espécie, semente ou local..." style="flex: 1; min-width: 220px;" />
+      <div class="admin-resumo" id="resumo-total" style="color: var(--texto-suave); font-size: 0.9rem;"></div>
+    </div>
+
+    <div id="lista-wrapper">
+      <div class="estado-carregando" style="text-align:center; padding: 3rem; color: var(--texto-suave);">
+        Carregando registros...
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    exigirLogin();
+
+    document.getElementById('link-sair').addEventListener('click', (e) => {
+      e.preventDefault();
+      encerrarSessao();
+    });
+
+    const usuario = obterUsuario();
+    const ehAdmin = usuario?.role === 'admin';
+    const ehEspecialista = usuario?.role === 'especialista' || ehAdmin;
+
+    document.getElementById('subtitulo-papel').textContent = ehEspecialista
+      ? 'Valide ou rejeite os registros enviados pela comunidade.'
+      : 'Acompanhe os registros de sementes da plataforma.';
+
+    let todosRegistros = [];
+    let statusAtivo = 'todos';
+
+    document.addEventListener('DOMContentLoaded', carregarRegistros);
+
+    document.querySelectorAll('.aba').forEach(aba => {
+      aba.addEventListener('click', () => {
+        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+        aba.classList.add('ativa');
+        statusAtivo = aba.dataset.status;
+        renderizarLista();
+      });
+    });
+
+    document.getElementById('busca').addEventListener('input', renderizarLista);
+
+    async function carregarRegistros() {
+      const wrapper = document.getElementById('lista-wrapper');
+      try {
+        const resposta = await apiListarRegistros();
+        const dados = resposta.data || resposta;
+        todosRegistros = dados.registros || dados || [];
+        renderizarLista();
+      } catch (err) {
+        wrapper.innerHTML = `<div style="text-align:center; padding: 3rem; color: var(--erro);">⚠️ Erro ao carregar registros: ${err.message}</div>`;
+      }
+    }
+
+    function renderizarLista() {
+      const wrapper = document.getElementById('lista-wrapper');
+      const termoBusca = document.getElementById('busca').value.trim().toLowerCase();
+
+      let filtrados = todosRegistros;
+
+      if (statusAtivo !== 'todos') {
+        filtrados = filtrados.filter(r => (r.status || '').toLowerCase() === statusAtivo);
+      }
+
+      if (termoBusca) {
+        filtrados = filtrados.filter(r => {
+          const especie = (r.semente?.especie?.nome_popular || '').toLowerCase();
+          const semente = (r.semente?.nome || '').toLowerCase();
+          const local = `${r.municipio || ''} ${r.estado || ''}`.toLowerCase();
+          return especie.includes(termoBusca) || semente.includes(termoBusca) || local.includes(termoBusca);
+        });
+      }
+
+      document.getElementById('resumo-total').textContent =
+        `${filtrados.length} de ${todosRegistros.length} registro${todosRegistros.length !== 1 ? 's' : ''}`;
+
+      if (filtrados.length === 0) {
+        wrapper.innerHTML = `<div style="text-align:center; padding: 3rem; color: var(--texto-suave);">Nenhum registro encontrado.</div>`;
+        return;
+      }
+
+      wrapper.innerHTML = filtrados.map(r => renderizarCard(r)).join('');
+
+      wrapper.querySelectorAll('.btn-mini--aprovar').forEach(btn => {
+        btn.addEventListener('click', () => acaoRegistro(btn.dataset.id, 'aprovar'));
+      });
+      wrapper.querySelectorAll('.btn-mini--rejeitar').forEach(btn => {
+        btn.addEventListener('click', () => acaoRegistro(btn.dataset.id, 'rejeitar'));
+      });
+      wrapper.querySelectorAll('.btn-mini--excluir').forEach(btn => {
+        btn.addEventListener('click', () => acaoExcluir(btn.dataset.id, btn.dataset.nome));
+      });
+    }
+
+    function renderizarCard(r) {
+      const especie = r.semente?.especie || {};
+      const semente = r.semente || {};
+      const foto = r.fotos?.[0]?.url || r.fotos?.[0]?.URL || '';
+      const status = (r.status || 'pendente').toLowerCase();
+
+      const botoesValidacao = ehEspecialista && status === 'pendente' ? `
+        <button type="button" class="btn-mini btn-mini--aprovar" data-id="${r.ID || r.id}">✓ Aprovar</button>
+        <button type="button" class="btn-mini btn-mini--rejeitar" data-id="${r.ID || r.id}">✕ Rejeitar</button>
+      ` : '';
+
+      const botaoExcluir = ehAdmin ? `
+        <button type="button" class="btn-mini btn-mini--excluir" data-id="${r.ID || r.id}" data-nome="${escapeHtmlLocal(especie.nome_popular || semente.nome || 'este registro')}">🗑️ Excluir</button>
+      ` : '';
+
+      return `
+        <div class="registro-card">
+          ${foto
+            ? `<img class="registro-card__foto" src="${foto}" alt="Foto de ${escapeHtmlLocal(especie.nome_popular || '')}" />`
+            : `<div class="registro-card__foto" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🌱</div>`
+          }
+          <div class="registro-card__corpo">
+            <div class="registro-card__titulo">${escapeHtmlLocal(especie.nome_popular || 'Espécie não informada')}</div>
+            <div class="registro-card__cientifico">${escapeHtmlLocal(especie.nome_cientifico || '')}</div>
+            <div class="registro-card__meta">
+              <span>🌾 ${escapeHtmlLocal(semente.nome || '—')}</span>
+              <span>📍 ${escapeHtmlLocal(r.municipio || '—')}${r.estado ? ' - ' + escapeHtmlLocal(r.estado) : ''}</span>
+              <span class="badge-status badge-status--${status}">${formatarStatus(status)}</span>
+            </div>
+          </div>
+          <div class="registro-card__acoes">
+            ${botoesValidacao}
+            ${botaoExcluir}
+          </div>
+        </div>
+      `;
+    }
+
+    async function acaoRegistro(id, tipo) {
+      try {
+        if (tipo === 'aprovar') {
+          await apiValidarRegistro(id);
+        } else {
+          await apiRejeitarRegistro(id);
+        }
+        await carregarRegistros();
+      } catch (err) {
+        alert('Erro: ' + (err.message || 'tente novamente.'));
+      }
+    }
+
+    async function acaoExcluir(id, nome) {
+      const confirmado = window.confirm(`Excluir o registro de "${nome}"? Esta ação é permanente.`);
+      if (!confirmado) return;
+
+      try {
+        await apiAdminExcluirRegistro(id);
+        await carregarRegistros();
+      } catch (err) {
+        alert('Erro ao excluir: ' + (err.message || 'tente novamente.'));
+      }
+    }
+
+    function formatarStatus(status) {
+      const mapa = { pendente: 'Pendente', aprovado: 'Aprovado', rejeitado: 'Rejeitado' };
+      return mapa[status] || status;
+    }
+
+    function escapeHtmlLocal(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+  </script>
+
+</body>
+</html>
