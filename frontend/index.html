@@ -14,10 +14,10 @@
       🌱 <span>Mapa das Sementes</span> do Brasil
     </div>
     <ul class="navbar__nav">
-      <li><a href="index.html">Início</a></li>
+      <li><a href="/frontend/index.html">Início</a></li>
       <li><a href="#" id="link-mapa">Mapa</a></li>
-      <li><a href="login.html">Entrar</a></li>
-      <li><a href="cadastro.html">Cadastrar</a></li>
+      <li><a href="/frontend/login.html">Entrar</a></li>
+      <li><a href="/frontend/cadastro.html">Cadastrar</a></li>
     </ul>
   </nav>
 
@@ -35,7 +35,7 @@
         <a href="#" id="btn-explorar" class="btn btn--secundario" style="color: #d8f3dc; border-color: #52b788;">
           🗺️ Explorar o Mapa
         </a>
-        <a href="cadastro.html" class="btn btn--primario" style="background: #52b788; color: #1b1b1b;">
+        <a href="/frontend/cadastro.html" class="btn btn--primario" style="background: #52b788; color: #1b1b1b;">
           Participar do projeto
         </a>
       </div>
@@ -106,11 +106,32 @@
 
   <script src="js/api.js"></script>
   <script>
-    // Redireciona usuários já logados para o mapa
+    // Ajusta a navbar e o hero conforme o estado de login.
+    // O mapa interativo (Leaflet) ainda está em desenvolvimento — enquanto
+    // isso, usuários logados veem uma mensagem de boas-vindas em vez de um
+    // link para uma página que ainda não existe.
     document.addEventListener('DOMContentLoaded', () => {
       if (estaLogado()) {
-        document.getElementById('link-mapa').href = 'mapa.html';
-        document.getElementById('btn-explorar').href = 'mapa.html';
+        const usuario = obterUsuario();
+        const navLista = document.querySelector('.navbar__nav');
+
+        // Remove o link "Entrar" e "Cadastrar" da navbar, adiciona saudação + sair
+        navLista.innerHTML = `
+          <li><a href="/frontend/index.html">Início</a></li>
+          <li style="color: #d8f3dc;">Olá, ${usuario?.nome?.split(' ')[0] || 'visitante'} 👋</li>
+          <li><a href="#" id="link-sair">Sair</a></li>
+        `;
+        document.getElementById('link-sair').addEventListener('click', (e) => {
+          e.preventDefault();
+          encerrarSessao();
+        });
+
+        // Botão principal do hero vira aviso de "em breve" em vez de link quebrado
+        const btnExplorar = document.getElementById('btn-explorar');
+        btnExplorar.textContent = '🗺️ Mapa interativo em breve';
+        btnExplorar.style.opacity = '0.7';
+        btnExplorar.style.cursor = 'default';
+        btnExplorar.addEventListener('click', (e) => e.preventDefault());
       }
 
       // Carrega estatísticas da API
@@ -119,21 +140,19 @@
 
     async function carregarStats() {
       try {
-        // Endpoint de stats (Etapa 4 — /api/registros/stats)
-        const dados = await requisicao('/api/registros/stats', 'GET', null, true);
+        // Rota real: GET /api/busca/estatisticas
+        const dados = await apiEstatisticas();
+        document.getElementById('stat-sementes').textContent =
+          dados.total_especies ?? dados.total_sementes ?? '—';
         document.getElementById('stat-registros').textContent =
           dados.total_registros ?? '—';
         document.getElementById('stat-estados').textContent =
           dados.total_estados ?? '—';
+        document.getElementById('stat-usuarios').textContent =
+          dados.total_usuarios ?? '—';
       } catch (_) {
         // Silencioso: stats são exibição, não funcionalidade crítica
       }
-
-      try {
-        const sementes = await apiListarSementes();
-        document.getElementById('stat-sementes').textContent =
-          Array.isArray(sementes) ? sementes.length : '—';
-      } catch (_) {}
     }
   </script>
 
