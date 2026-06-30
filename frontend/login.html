@@ -10,12 +10,12 @@
 
   <!-- Navbar -->
   <nav class="navbar">
-    <a class="navbar__logo" href="index.html">
+    <a class="navbar__logo" href="/frontend/index.html">
       🌱 <span>Mapa das Sementes</span> do Brasil
     </a>
     <ul class="navbar__nav">
-      <li><a href="index.html">Início</a></li>
-      <li><a href="cadastro.html">Cadastrar</a></li>
+      <li><a href="/frontend/index.html">Início</a></li>
+      <li><a href="/frontend/cadastro.html">Cadastrar</a></li>
     </ul>
   </nav>
 
@@ -59,7 +59,7 @@
 
       <p class="auth-card__rodape">
         Não tem conta?
-        <a href="cadastro.html">Cadastre-se gratuitamente</a>
+        <a href="/frontend/cadastro.html">Cadastre-se gratuitamente</a>
       </p>
     </div>
   </div>
@@ -68,7 +68,7 @@
   <script>
     // Se já estiver logado, redireciona direto para o mapa
     if (estaLogado()) {
-      window.location.href = 'mapa.html';
+      window.location.href = '/frontend/index.html';
     }
 
     const form = document.getElementById('form-login');
@@ -91,7 +91,7 @@
       try {
         await apiLogin(email, senha);
         // Login OK — redireciona para o mapa
-        window.location.href = 'mapa.html';
+        window.location.href = '/frontend/index.html';
       } catch (err) {
         exibirMensagem('msg-login', err.message || 'Erro ao fazer login.', 'erro');
       } finally {
