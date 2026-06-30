@@ -188,6 +188,37 @@ async function apiDeletarRegistro(id) {
   return await requisicao(`/api/registros/${id}`, 'DELETE');
 }
 
+/**
+ * Envia até 5 fotos para um registro (multipart/form-data).
+ * Rota real: POST /api/registros/:id/fotos — campo "fotos" (plural), máx. 5 arquivos.
+ * @param {number} registroId
+ * @param {File[]} arquivos - lista de arquivos de imagem
+ * @param {string} legenda - legenda opcional aplicada às fotos
+ */
+async function apiUploadFotosRegistro(registroId, arquivos, legenda = '') {
+  const token = obterToken();
+  if (!token) {
+    encerrarSessao();
+    throw new Error('Sessão expirada. Faça login novamente.');
+  }
+
+  const formData = new FormData();
+  arquivos.forEach(arquivo => formData.append('fotos', arquivo));
+  if (legenda) formData.append('legenda', legenda);
+
+  const resposta = await fetch(`${API_BASE}/api/registros/${registroId}/fotos`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }, // sem Content-Type: o browser define o boundary
+    body: formData,
+  });
+
+  const dados = await resposta.json();
+  if (!resposta.ok) {
+    throw new Error(dados.message || dados.erro || dados.error || `Erro ${resposta.status}`);
+  }
+  return dados.data || dados;
+}
+
 /* -----------------------------------------------
    Busca avançada (pública) — /api/busca/...
 ----------------------------------------------- */
