@@ -80,7 +80,18 @@
             <option value="artesao">🧵 Artesão(ã) — coleto ou trabalho com sementes</option>
             <option value="pesquisador">🔬 Pesquisador(a) — estudo e analiso espécies</option>
             <option value="especialista">✅ Especialista — valido informações técnicas</option>
+            <option value="estudante">🎓 Estudante — estou aprendendo sobre o tema</option>
+            <option value="agente_territorial">🌎 Agente Territorial Cultural — atuo com cultura e território</option>
           </select>
+        </div>
+
+        <div class="form-grupo oculto" id="grupo-curso">
+          <label for="curso">Curso que está estudando</label>
+          <input
+            type="text"
+            id="curso"
+            placeholder="Ex: Engenharia Florestal - UFG"
+          />
         </div>
 
         <div id="msg-cadastro" class="msg"></div>
@@ -106,6 +117,17 @@
 
     const form = document.getElementById('form-cadastro');
     const btn  = document.getElementById('btn-cadastro');
+    const selectRole = document.getElementById('role');
+    const grupoCurso = document.getElementById('grupo-curso');
+    const inputCurso = document.getElementById('curso');
+
+    // Mostra/esconde o campo "Curso" conforme o perfil escolhido
+    selectRole.addEventListener('change', () => {
+      const ehEstudante = selectRole.value === 'estudante';
+      grupoCurso.classList.toggle('oculto', !ehEstudante);
+      inputCurso.required = ehEstudante;
+      if (!ehEstudante) inputCurso.value = '';
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -115,11 +137,16 @@
       const email    = document.getElementById('email').value.trim();
       const telefone = document.getElementById('telefone').value.trim();
       const senha    = document.getElementById('senha').value;
-      const role     = document.getElementById('role').value;
+      const role     = selectRole.value;
+      const curso    = inputCurso.value.trim();
 
       // Validações básicas no front
       if (!nome_completo || !email || !telefone || !senha || !role) {
         exibirMensagem('msg-cadastro', 'Preencha todos os campos.', 'erro');
+        return;
+      }
+      if (role === 'estudante' && !curso) {
+        exibirMensagem('msg-cadastro', 'Informe o curso que está estudando.', 'erro');
         return;
       }
       if (senha.length < 6) {
@@ -130,7 +157,7 @@
       estadoBotao(btn, true);
 
       try {
-        await apiCadastrar({ nome_completo, email, telefone, senha, role });
+        await apiCadastrar({ nome_completo, email, telefone, senha, role, curso });
 
         // Cadastro OK — faz login automático
         exibirMensagem('msg-cadastro', '✅ Conta criada! Redirecionando...', 'sucesso');
