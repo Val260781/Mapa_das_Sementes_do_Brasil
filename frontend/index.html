@@ -123,6 +123,7 @@
 
         navLista.innerHTML = `
           <li><a href="/frontend/index.html">Início</a></li>
+          <li><a href="/frontend/cadastro-semente.html" style="color: #d8f3dc;">🌳 Cadastrar semente</a></li>
           ${linkAdmin}
           <li style="color: #d8f3dc;">Olá, ${usuario?.nome_completo?.split(' ')[0] || 'visitante'} 👋</li>
           <li><a href="#" id="link-sair">Sair</a></li>
@@ -134,10 +135,8 @@
 
         // Botão principal do hero vira aviso de "em breve" em vez de link quebrado
         const btnExplorar = document.getElementById('btn-explorar');
-        btnExplorar.textContent = '🗺️ Mapa interativo em breve';
-        btnExplorar.style.opacity = '0.7';
-        btnExplorar.style.cursor = 'default';
-        btnExplorar.addEventListener('click', (e) => e.preventDefault());
+        btnExplorar.textContent = '🌳 Cadastrar nova semente';
+        btnExplorar.href = '/frontend/cadastro-semente.html';
       }
 
       // Carrega estatísticas da API
