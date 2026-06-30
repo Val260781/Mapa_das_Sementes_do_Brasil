@@ -270,6 +270,20 @@ function exibirMensagem(seletorId, texto, tipo = 'erro') {
   el.className = `msg msg--${tipo} visivel`;
 }
 
+/**
+ * Exibe uma mensagem de erro com um link de ação (ex: "Fazer login").
+ * @param {string} seletorId
+ * @param {string} texto
+ * @param {string} href
+ * @param {string} textoLink
+ */
+function exibirMensagemComLink(seletorId, texto, href, textoLink) {
+  const el = document.getElementById(seletorId);
+  if (!el) return;
+  el.innerHTML = `${texto} <a href="${href}" style="font-weight: 700; text-decoration: underline;">${textoLink}</a>`;
+  el.className = 'msg msg--erro visivel';
+}
+
 function ocultarMensagem(seletorId) {
   const el = document.getElementById(seletorId);
   if (el) el.classList.remove('visivel');
