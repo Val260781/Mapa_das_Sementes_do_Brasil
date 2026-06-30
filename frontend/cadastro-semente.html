@@ -202,38 +202,42 @@
       <!-- ============ ESPÉCIE ============ -->
       <div class="form-secao">
         <div class="form-secao__titulo">🌿 Dados da espécie</div>
+        <p style="color: var(--texto-suave); font-size: 0.85rem; margin-top: -0.8rem; margin-bottom: 1rem;">
+          Digite o nome popular — buscamos automaticamente os dados botânicos.
+        </p>
 
-        <div class="form-linha">
-          <div class="form-grupo">
-            <label for="nome_popular">Nome popular</label>
-            <input type="text" id="nome_popular" placeholder="Ex: Pequi" required />
-          </div>
-          <div class="form-grupo" style="position: relative;">
-            <label for="nome_cientifico">
-              Nome científico
-              <span style="font-weight: 400; color: var(--texto-suave); font-size: 0.8rem;">
-                (busca automática no GBIF)
-              </span>
-            </label>
-            <input
-              type="text"
-              id="nome_cientifico"
-              placeholder="Digite ao menos 3 letras... Ex: Caryocar"
-              autocomplete="off"
-              required
-            />
-            <div id="sugestoes-especie" class="sugestoes-dropdown oculto"></div>
-          </div>
+        <div class="form-grupo" style="position: relative;">
+          <label for="nome_popular">
+            Nome popular
+            <span style="font-weight: 400; color: var(--texto-suave); font-size: 0.8rem;">
+              (busca automática)
+            </span>
+          </label>
+          <input
+            type="text"
+            id="nome_popular"
+            placeholder="Digite ao menos 3 letras... Ex: Buriti"
+            autocomplete="off"
+            required
+          />
+          <div id="sugestoes-especie" class="sugestoes-dropdown oculto"></div>
         </div>
 
         <div id="fonte-gbif" class="oculto" style="font-size: 0.8rem; color: var(--verde-medio); margin-top: -0.6rem; margin-bottom: 1rem;">
-          ✓ Dados preenchidos a partir do GBIF — <a href="#" id="link-gbif" target="_blank" rel="noopener">ver referência</a>
+          ✓ Espécie reconhecida — dados preenchidos automaticamente.
+          <a href="#" id="link-gbif" target="_blank" rel="noopener">Ver referência</a> ·
+          <button type="button" id="btn-editar-manual" style="background:none;border:none;color:var(--verde-medio);text-decoration:underline;cursor:pointer;font-size:0.8rem;padding:0;">Editar manualmente</button>
+        </div>
+
+        <div class="form-grupo">
+          <label for="nome_cientifico">Nome científico</label>
+          <input type="text" id="nome_cientifico" placeholder="Preenchido automaticamente, ou digite se não encontrado" required />
         </div>
 
         <div class="form-linha">
           <div class="form-grupo">
             <label for="familia">Família botânica</label>
-            <input type="text" id="familia" placeholder="Ex: Caryocaraceae" />
+            <input type="text" id="familia" placeholder="Preenchido automaticamente" />
           </div>
           <div class="form-grupo">
             <label for="bioma">Bioma</label>
@@ -251,18 +255,22 @@
 
         <div class="form-grupo">
           <label for="descricao_especie">Descrição da espécie</label>
-          <textarea id="descricao_especie" rows="3" placeholder="Características gerais, usos, importância ecológica..."></textarea>
+          <textarea id="descricao_especie" rows="3" placeholder="Preenchido automaticamente quando disponível"></textarea>
         </div>
 
-        <div class="form-linha">
-          <div class="form-grupo">
-            <label for="usos_artesanais_especie">Usos artesanais</label>
-            <input type="text" id="usos_artesanais_especie" placeholder="Ex: Biojoias, tingimento" />
-          </div>
-          <div class="form-grupo">
-            <label for="epoca_colheita">Época de colheita</label>
-            <input type="text" id="epoca_colheita" placeholder="Ex: Setembro a Janeiro" />
-          </div>
+        <div class="form-grupo">
+          <label for="epoca_colheita">Época de colheita</label>
+          <input type="text" id="epoca_colheita" placeholder="Ex: Setembro a Janeiro" />
+        </div>
+
+        <div class="form-grupo">
+          <label for="usos_culturais">
+            Como vocês usam essa espécie na sua comunidade?
+            <span style="font-weight: 400; color: var(--texto-suave); font-size: 0.8rem;">
+              (conhecimento tradicional — conte com suas palavras)
+            </span>
+          </label>
+          <textarea id="usos_culturais" rows="3" placeholder="Ex: Usamos a fibra da palha para tecer cestos e esteiras, técnica passada pelos mais velhos da comunidade..."></textarea>
         </div>
       </div>
 
@@ -474,18 +482,26 @@
     }
 
     // --- Autocomplete de espécie via GBIF (Global Biodiversity Information Facility) ---
-    const inputCientifico = document.getElementById('nome_cientifico');
-    const dropdownEspecie = document.getElementById('sugestoes-especie');
-    const blocoFonteGbif  = document.getElementById('fonte-gbif');
-    const linkGbif        = document.getElementById('link-gbif');
+    // Busca por nome popular: usamos /species/search (busca textual ampla,
+    // que cobre nomes vernaculares) em vez de /species/suggest (só prefixo
+    // de nome científico).
+    const inputPopular     = document.getElementById('nome_popular');
+    const inputCientifico  = document.getElementById('nome_cientifico');
+    const dropdownEspecie  = document.getElementById('sugestoes-especie');
+    const blocoFonteGbif   = document.getElementById('fonte-gbif');
+    const linkGbif         = document.getElementById('link-gbif');
+    const btnEditarManual  = document.getElementById('btn-editar-manual');
+
+    const camposTecnicos = ['nome_cientifico', 'familia', 'bioma', 'descricao_especie'];
 
     let timerBuscaGbif = null;
-    let especieGbifSelecionada = null;
+    let especieReconhecida = false;
 
-    inputCientifico.addEventListener('input', () => {
-      const termo = inputCientifico.value.trim();
-      especieGbifSelecionada = null;
+    inputPopular.addEventListener('input', () => {
+      const termo = inputPopular.value.trim();
       blocoFonteGbif.classList.add('oculto');
+      destravarCamposTecnicos();
+      especieReconhecida = false;
 
       clearTimeout(timerBuscaGbif);
       if (termo.length < 3) {
@@ -499,58 +515,102 @@
 
     // Fecha o dropdown ao clicar fora
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('#nome_cientifico') && !e.target.closest('#sugestoes-especie')) {
+      if (!e.target.closest('#nome_popular') && !e.target.closest('#sugestoes-especie')) {
         dropdownEspecie.classList.add('oculto');
       }
     });
 
+    btnEditarManual.addEventListener('click', () => {
+      destravarCamposTecnicos();
+      blocoFonteGbif.classList.add('oculto');
+    });
+
+    function travarCamposTecnicos() {
+      camposTecnicos.forEach(id => {
+        const el = document.getElementById(id);
+        el.readOnly = true;
+        el.style.background = 'var(--terra-escura)';
+        el.style.cursor = 'not-allowed';
+      });
+      document.getElementById('bioma').disabled = true;
+    }
+
+    function destravarCamposTecnicos() {
+      camposTecnicos.forEach(id => {
+        const el = document.getElementById(id);
+        el.readOnly = false;
+        el.style.background = '';
+        el.style.cursor = '';
+      });
+      document.getElementById('bioma').disabled = false;
+    }
+
     async function buscarEspeciesGbif(termo) {
       try {
-        // API pública GBIF, sem necessidade de chave de autenticação
-        const url = `https://api.gbif.org/v1/species/suggest?q=${encodeURIComponent(termo)}&rank=SPECIES&limit=8`;
+        // Busca textual ampla — cobre nomes populares e científicos.
+        // Filtramos por kingdom=Plantae no resultado, já que o parâmetro
+        // highertaxonKey exigiria confirmar o usageKey exato do reino.
+        const url = `https://api.gbif.org/v1/species/search?q=${encodeURIComponent(termo)}&rank=SPECIES&limit=20`;
         const resposta = await fetch(url);
         if (!resposta.ok) throw new Error('Falha na busca');
-        const resultados = await resposta.json();
+        const dados = await resposta.json();
 
-        // Filtra apenas resultados do reino Plantae, com nome científico válido
-        const plantas = resultados.filter(r => r.kingdom === 'Plantae' && r.canonicalName);
-
-        renderizarSugestoes(plantas);
+        const plantas = (dados.results || [])
+          .filter(r => r.kingdom === 'Plantae' && r.canonicalName)
+          .slice(0, 8);
+        renderizarSugestoes(plantas, termo);
       } catch (err) {
         // Falha silenciosa: busca automática é um auxílio, não bloqueia o cadastro manual
         dropdownEspecie.classList.add('oculto');
       }
     }
 
-    function renderizarSugestoes(plantas) {
+    function renderizarSugestoes(plantas, termoOriginal) {
       if (plantas.length === 0) {
-        dropdownEspecie.innerHTML = `<div class="sugestao-item--vazio">Nenhuma espécie encontrada no GBIF. Continue digitando manualmente.</div>`;
+        dropdownEspecie.innerHTML = `<div class="sugestao-item--vazio">Nenhuma espécie encontrada. Você pode preencher os dados manualmente abaixo.</div>`;
         dropdownEspecie.classList.remove('oculto');
         return;
       }
 
       dropdownEspecie.innerHTML = plantas.map((p, i) => `
         <div class="sugestao-item" data-index="${i}">
+          <div>${escapeHtmlLocal(termoOriginal)}</div>
           <div class="sugestao-item__cientifico">${escapeHtmlLocal(p.canonicalName)}</div>
           <div class="sugestao-item__familia">${escapeHtmlLocal(p.family || 'Família não informada')}</div>
         </div>
       `).join('');
 
       dropdownEspecie.querySelectorAll('.sugestao-item').forEach((el, i) => {
-        el.addEventListener('click', () => selecionarEspecieGbif(plantas[i]));
+        el.addEventListener('click', () => selecionarEspecieGbif(plantas[i], termoOriginal));
       });
 
       dropdownEspecie.classList.remove('oculto');
     }
 
-    function selecionarEspecieGbif(planta) {
+    async function selecionarEspecieGbif(planta, nomePopularDigitado) {
+      dropdownEspecie.classList.add('oculto');
+      destravarCamposTecnicos(); // garante que consegue preencher antes de travar
+
+      inputPopular.value = nomePopularDigitado;
       inputCientifico.value = planta.canonicalName;
-      if (planta.family) {
-        document.getElementById('familia').value = planta.family;
+      document.getElementById('familia').value = planta.family || '';
+
+      // Busca detalhes adicionais (descrição) quando disponíveis
+      try {
+        const detalhes = await fetch(`https://api.gbif.org/v1/species/${planta.key}/descriptions`);
+        if (detalhes.ok) {
+          const dadosDesc = await detalhes.json();
+          const descricaoGeral = (dadosDesc.results || []).find(d => d.description)?.description;
+          if (descricaoGeral) {
+            document.getElementById('descricao_especie').value = descricaoGeral.slice(0, 500);
+          }
+        }
+      } catch (err) {
+        // Descrição é complementar — segue sem ela se falhar
       }
 
-      especieGbifSelecionada = planta;
-      dropdownEspecie.classList.add('oculto');
+      especieReconhecida = true;
+      travarCamposTecnicos();
 
       blocoFonteGbif.classList.remove('oculto');
       linkGbif.href = `https://www.gbif.org/species/${planta.key}`;
@@ -666,7 +726,7 @@
           familia: document.getElementById('familia').value.trim(),
           bioma: document.getElementById('bioma').value,
           descricao: document.getElementById('descricao_especie').value.trim(),
-          usos_artesanais: document.getElementById('usos_artesanais_especie').value.trim(),
+          usos_artesanais: document.getElementById('usos_culturais').value.trim(),
           epoca_colheita: document.getElementById('epoca_colheita').value.trim(),
         });
         marcarEtapa(1, 'concluida');
