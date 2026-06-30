@@ -123,6 +123,49 @@
       background: var(--verde-escuro);
       color: var(--branco);
     }
+    .sugestoes-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      background: var(--branco);
+      border: 1.5px solid var(--verde-medio);
+      border-top: none;
+      border-radius: 0 0 var(--raio) var(--raio);
+      box-shadow: var(--sombra);
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .sugestao-item {
+      padding: 0.6rem 0.9rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--terra-escura);
+      font-size: 0.9rem;
+    }
+    .sugestao-item:last-child {
+      border-bottom: none;
+    }
+    .sugestao-item:hover,
+    .sugestao-item.destacada {
+      background: var(--verde-suave);
+    }
+    .sugestao-item__cientifico {
+      font-style: italic;
+      color: var(--verde-escuro);
+      font-weight: 700;
+    }
+    .sugestao-item__familia {
+      color: var(--texto-suave);
+      font-size: 0.8rem;
+    }
+    .sugestao-item--vazio {
+      padding: 0.8rem;
+      color: var(--texto-suave);
+      font-size: 0.85rem;
+      text-align: center;
+      cursor: default;
+    }
   </style>
 </head>
 <body>
@@ -165,10 +208,26 @@
             <label for="nome_popular">Nome popular</label>
             <input type="text" id="nome_popular" placeholder="Ex: Pequi" required />
           </div>
-          <div class="form-grupo">
-            <label for="nome_cientifico">Nome científico</label>
-            <input type="text" id="nome_cientifico" placeholder="Ex: Caryocar brasiliense" required />
+          <div class="form-grupo" style="position: relative;">
+            <label for="nome_cientifico">
+              Nome científico
+              <span style="font-weight: 400; color: var(--texto-suave); font-size: 0.8rem;">
+                (busca automática no GBIF)
+              </span>
+            </label>
+            <input
+              type="text"
+              id="nome_cientifico"
+              placeholder="Digite ao menos 3 letras... Ex: Caryocar"
+              autocomplete="off"
+              required
+            />
+            <div id="sugestoes-especie" class="sugestoes-dropdown oculto"></div>
           </div>
+        </div>
+
+        <div id="fonte-gbif" class="oculto" style="font-size: 0.8rem; color: var(--verde-medio); margin-top: -0.6rem; margin-bottom: 1rem;">
+          ✓ Dados preenchidos a partir do GBIF — <a href="#" id="link-gbif" target="_blank" rel="noopener">ver referência</a>
         </div>
 
         <div class="form-linha">
@@ -412,6 +471,95 @@
         previewGrid.appendChild(item);
       });
       contadorFotos.textContent = `${fotosSelecionadas.length} de ${MAX_FOTOS} fotos selecionadas`;
+    }
+
+    // --- Autocomplete de espécie via GBIF (Global Biodiversity Information Facility) ---
+    const inputCientifico = document.getElementById('nome_cientifico');
+    const dropdownEspecie = document.getElementById('sugestoes-especie');
+    const blocoFonteGbif  = document.getElementById('fonte-gbif');
+    const linkGbif        = document.getElementById('link-gbif');
+
+    let timerBuscaGbif = null;
+    let especieGbifSelecionada = null;
+
+    inputCientifico.addEventListener('input', () => {
+      const termo = inputCientifico.value.trim();
+      especieGbifSelecionada = null;
+      blocoFonteGbif.classList.add('oculto');
+
+      clearTimeout(timerBuscaGbif);
+      if (termo.length < 3) {
+        dropdownEspecie.classList.add('oculto');
+        return;
+      }
+
+      // Debounce de 400ms para não disparar uma chamada a cada tecla
+      timerBuscaGbif = setTimeout(() => buscarEspeciesGbif(termo), 400);
+    });
+
+    // Fecha o dropdown ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#nome_cientifico') && !e.target.closest('#sugestoes-especie')) {
+        dropdownEspecie.classList.add('oculto');
+      }
+    });
+
+    async function buscarEspeciesGbif(termo) {
+      try {
+        // API pública GBIF, sem necessidade de chave de autenticação
+        const url = `https://api.gbif.org/v1/species/suggest?q=${encodeURIComponent(termo)}&rank=SPECIES&limit=8`;
+        const resposta = await fetch(url);
+        if (!resposta.ok) throw new Error('Falha na busca');
+        const resultados = await resposta.json();
+
+        // Filtra apenas resultados do reino Plantae, com nome científico válido
+        const plantas = resultados.filter(r => r.kingdom === 'Plantae' && r.canonicalName);
+
+        renderizarSugestoes(plantas);
+      } catch (err) {
+        // Falha silenciosa: busca automática é um auxílio, não bloqueia o cadastro manual
+        dropdownEspecie.classList.add('oculto');
+      }
+    }
+
+    function renderizarSugestoes(plantas) {
+      if (plantas.length === 0) {
+        dropdownEspecie.innerHTML = `<div class="sugestao-item--vazio">Nenhuma espécie encontrada no GBIF. Continue digitando manualmente.</div>`;
+        dropdownEspecie.classList.remove('oculto');
+        return;
+      }
+
+      dropdownEspecie.innerHTML = plantas.map((p, i) => `
+        <div class="sugestao-item" data-index="${i}">
+          <div class="sugestao-item__cientifico">${escapeHtmlLocal(p.canonicalName)}</div>
+          <div class="sugestao-item__familia">${escapeHtmlLocal(p.family || 'Família não informada')}</div>
+        </div>
+      `).join('');
+
+      dropdownEspecie.querySelectorAll('.sugestao-item').forEach((el, i) => {
+        el.addEventListener('click', () => selecionarEspecieGbif(plantas[i]));
+      });
+
+      dropdownEspecie.classList.remove('oculto');
+    }
+
+    function selecionarEspecieGbif(planta) {
+      inputCientifico.value = planta.canonicalName;
+      if (planta.family) {
+        document.getElementById('familia').value = planta.family;
+      }
+
+      especieGbifSelecionada = planta;
+      dropdownEspecie.classList.add('oculto');
+
+      blocoFonteGbif.classList.remove('oculto');
+      linkGbif.href = `https://www.gbif.org/species/${planta.key}`;
+    }
+
+    function escapeHtmlLocal(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
     }
 
     // --- Geolocalização ---
