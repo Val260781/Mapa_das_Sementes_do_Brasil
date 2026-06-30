@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Admin — Mapa das Sementes do Brasil</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .admin-tabela {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--branco);
+      border-radius: var(--raio-lg);
+      overflow: hidden;
+      box-shadow: var(--sombra);
+      margin-top: 1.5rem;
+    }
+    .admin-tabela th,
+    .admin-tabela td {
+      padding: 0.8rem 1rem;
+      text-align: left;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--terra-escura);
+    }
+    .admin-tabela th {
+      background: var(--verde-suave);
+      color: var(--verde-escuro);
+      font-weight: 700;
+    }
+    .admin-tabela tr:last-child td {
+      border-bottom: none;
+    }
+    .admin-tabela tr:hover {
+      background: var(--terra);
+    }
+    .badge-role {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: var(--verde-suave);
+      color: var(--verde-escuro);
+    }
+    .admin-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .admin-busca {
+      flex: 1;
+      max-width: 320px;
+    }
+    .admin-resumo {
+      font-size: 0.9rem;
+      color: var(--texto-suave);
+    }
+    .estado-vazio,
+    .estado-erro,
+    .estado-carregando {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--texto-suave);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="navbar__logo" href="/frontend/index.html">
+      🌱 <span>Mapa das Sementes</span> do Brasil
+    </a>
+    <ul class="navbar__nav">
+      <li><a href="/frontend/index.html">Início</a></li>
+      <li><a href="#" id="link-sair">Sair</a></li>
+    </ul>
+  </nav>
+
+  <div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+
+    <!-- Conteúdo só aparece se for admin -->
+    <div id="painel-admin" class="oculto">
+      <h1 style="color: var(--verde-escuro); font-size: 1.6rem;">
+        👥 Usuários cadastrados
+      </h1>
+      <p style="color: var(--texto-suave); margin-top: 0.3rem;">
+        Acompanhe todos os cadastros realizados na plataforma.
+      </p>
+
+      <div class="admin-toolbar">
+        <div class="form-grupo admin-busca" style="margin-bottom: 0;">
+          <input
+            type="text"
+            id="busca"
+            placeholder="🔍 Buscar por nome ou e-mail..."
+          />
+        </div>
+        <div class="admin-resumo" id="resumo-total">Carregando...</div>
+      </div>
+
+      <div id="tabela-wrapper">
+        <div class="estado-carregando">Carregando usuários...</div>
+      </div>
+    </div>
+
+    <!-- Acesso negado -->
+    <div id="acesso-negado" class="oculto card texto-centro" style="max-width: 480px; margin: 3rem auto;">
+      <h2 style="color: var(--erro);">🔒 Acesso restrito</h2>
+      <p style="color: var(--texto-suave); margin-top: 0.5rem;">
+        Esta página é exclusiva para administradores da plataforma.
+      </p>
+      <a href="/frontend/index.html" class="btn btn--primario mt-3">Voltar ao início</a>
+    </div>
+
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    exigirLogin();
+
+    document.getElementById('link-sair').addEventListener('click', (e) => {
+      e.preventDefault();
+      encerrarSessao();
+    });
+
+    let todosUsuarios = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const usuario = obterUsuario();
+
+      if (!usuario || usuario.role !== 'admin') {
+        document.getElementById('acesso-negado').classList.remove('oculto');
+        return;
+      }
+
+      document.getElementById('painel-admin').classList.remove('oculto');
+      await carregarUsuarios();
+
+      document.getElementById('busca').addEventListener('input', (e) => {
+        filtrarERenderizar(e.target.value);
+      });
+    });
+
+    async function carregarUsuarios() {
+      const wrapper = document.getElementById('tabela-wrapper');
+      try {
+        // Rota real: GET /api/admin/usuarios (protegida, role=admin)
+        const resposta = await requisicao('/api/admin/usuarios');
+        const dados = resposta.data || resposta;
+        todosUsuarios = Array.isArray(dados) ? dados : (dados.usuarios || []);
+
+        if (todosUsuarios.length === 0) {
+          wrapper.innerHTML = '<div class="estado-vazio">Nenhum usuário cadastrado ainda.</div>';
+          document.getElementById('resumo-total').textContent = '0 usuários';
+          return;
+        }
+
+        renderizarTabela(todosUsuarios);
+        document.getElementById('resumo-total').textContent =
+          `${todosUsuarios.length} usuário${todosUsuarios.length !== 1 ? 's' : ''}`;
+
+      } catch (err) {
+        wrapper.innerHTML = `<div class="estado-erro">⚠️ Erro ao carregar usuários: ${err.message}</div>`;
+      }
+    }
+
+    function filtrarERenderizar(termo) {
+      const termoBusca = termo.trim().toLowerCase();
+      const filtrados = !termoBusca
+        ? todosUsuarios
+        : todosUsuarios.filter(u =>
+            (u.nome_completo || '').toLowerCase().includes(termoBusca) ||
+            (u.email || '').toLowerCase().includes(termoBusca)
+          );
+
+      renderizarTabela(filtrados);
+      document.getElementById('resumo-total').textContent =
+        `${filtrados.length} de ${todosUsuarios.length} usuário${todosUsuarios.length !== 1 ? 's' : ''}`;
+    }
+
+    function renderizarTabela(lista) {
+      const wrapper = document.getElementById('tabela-wrapper');
+
+      if (lista.length === 0) {
+        wrapper.innerHTML = '<div class="estado-vazio">Nenhum usuário encontrado para essa busca.</div>';
+        return;
+      }
+
+      const linhas = lista.map(u => `
+        <tr>
+          <td>${escapeHtml(u.nome_completo || '—')}</td>
+          <td>${escapeHtml(u.email || '—')}</td>
+          <td><span class="badge-role">${formatarPapel(u.role)}</span></td>
+          <td>${escapeHtml(u.municipio || '—')}${u.estado ? ' - ' + escapeHtml(u.estado) : ''}</td>
+          <td>${formatarData(u.created_at)}</td>
+        </tr>
+      `).join('');
+
+      wrapper.innerHTML = `
+        <table class="admin-tabela">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Perfil</th>
+              <th>Localização</th>
+              <th>Cadastrado em</th>
+            </tr>
+          </thead>
+          <tbody>${linhas}</tbody>
+        </table>
+      `;
+    }
+
+    function formatarData(isoString) {
+      if (!isoString) return '—';
+      const data = new Date(isoString);
+      if (isNaN(data)) return '—';
+      return data.toLocaleDateString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function escapeHtml(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+  </script>
+
+</body>
+</html>
