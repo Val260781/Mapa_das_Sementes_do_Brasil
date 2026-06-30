@@ -194,10 +194,42 @@
     <div class="progresso-etapas">
       <div class="progresso-etapa ativa" id="etapa-1">1. Espécie e semente</div>
       <div class="progresso-etapa" id="etapa-2">2. Localização</div>
-      <div class="progresso-etapa" id="etapa-3">3. Fotos</div>
+      <div class="progresso-etapa" id="etapa-3">3. Enviando fotos</div>
     </div>
 
     <form id="form-semente" class="card" novalidate>
+
+      <!-- ============ FOTOS (primeiro passo) ============ -->
+      <div class="form-secao">
+        <div class="form-secao__titulo">📷 Comece com uma foto</div>
+        <p style="color: var(--texto-suave); font-size: 0.85rem; margin-top: -0.8rem; margin-bottom: 1.2rem;">
+          Tire fotos da semente ou da árvore — até 5 imagens.
+        </p>
+
+        <div class="upload-area" id="upload-area">
+          <div class="upload-area__icone">📸</div>
+          <div class="upload-area__texto">
+            Toque para tirar uma foto agora<br>
+            <small>JPG, PNG — máximo 5 fotos, até 5MB cada</small>
+          </div>
+          <div class="upload-area__contador" id="contador-fotos">0 de 5 fotos selecionadas</div>
+        </div>
+
+        <!-- capture="environment" abre a câmera traseira direto no celular -->
+        <input type="file" id="input-camera" accept="image/*" capture="environment" class="oculto" />
+        <input type="file" id="input-fotos" accept="image/*" multiple class="oculto" />
+
+        <button type="button" class="btn btn--secundario btn--bloco mt-2" id="btn-galeria">
+          🖼️ Ou escolher fotos da galeria
+        </button>
+
+        <div class="preview-grid" id="preview-grid"></div>
+
+        <div class="form-grupo mt-3">
+          <label for="legenda_fotos">Legenda das fotos (opcional)</label>
+          <input type="text" id="legenda_fotos" placeholder="Ex: Pequi coletado em área de cerrado nativo" />
+        </div>
+      </div>
 
       <!-- ============ ESPÉCIE ============ -->
       <div class="form-secao">
@@ -358,28 +390,6 @@
         </div>
       </div>
 
-      <!-- ============ FOTOS ============ -->
-      <div class="form-secao">
-        <div class="form-secao__titulo">📷 Fotos (até 5 imagens)</div>
-
-        <div class="upload-area" id="upload-area">
-          <div class="upload-area__icone">📤</div>
-          <div class="upload-area__texto">
-            Clique para escolher fotos ou arraste aqui<br>
-            <small>JPG, PNG — máximo 5 fotos, até 5MB cada</small>
-          </div>
-          <div class="upload-area__contador" id="contador-fotos">0 de 5 fotos selecionadas</div>
-        </div>
-        <input type="file" id="input-fotos" accept="image/*" multiple class="oculto" />
-
-        <div class="preview-grid" id="preview-grid"></div>
-
-        <div class="form-grupo mt-3">
-          <label for="legenda_fotos">Legenda das fotos (opcional)</label>
-          <input type="text" id="legenda_fotos" placeholder="Ex: Pequi coletado em área de cerrado nativo" />
-        </div>
-      </div>
-
       <div id="msg-semente" class="msg msg--erro"></div>
       <div id="msg-progresso" class="msg msg--sucesso"></div>
 
@@ -403,12 +413,18 @@
     const MAX_FOTOS = 5;
     let fotosSelecionadas = [];
 
-    const uploadArea   = document.getElementById('upload-area');
-    const inputFotos   = document.getElementById('input-fotos');
-    const previewGrid  = document.getElementById('preview-grid');
-    const contadorFotos = document.getElementById('contador-fotos');
+    const uploadArea     = document.getElementById('upload-area');
+    const inputCamera    = document.getElementById('input-camera');
+    const inputFotos     = document.getElementById('input-fotos');
+    const btnGaleria     = document.getElementById('btn-galeria');
+    const previewGrid    = document.getElementById('preview-grid');
+    const contadorFotos  = document.getElementById('contador-fotos');
 
-    uploadArea.addEventListener('click', () => inputFotos.click());
+    // Toque na área principal abre a câmera direto (capture="environment")
+    uploadArea.addEventListener('click', () => inputCamera.click());
+
+    // Botão secundário abre a galeria normal, com seleção múltipla
+    btnGaleria.addEventListener('click', () => inputFotos.click());
 
     uploadArea.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -421,6 +437,11 @@
       e.preventDefault();
       uploadArea.classList.remove('arrastando');
       adicionarFotos(Array.from(e.dataTransfer.files));
+    });
+
+    inputCamera.addEventListener('change', (e) => {
+      adicionarFotos(Array.from(e.target.files));
+      inputCamera.value = ''; // permite tirar outra foto em seguida
     });
 
     inputFotos.addEventListener('change', (e) => {
