@@ -30,8 +30,9 @@ type CadastroInput struct {
 	Bairro    string `json:"bairro"`
 
 	// --- Atuação ---
-	Role            string `json:"role"` // artesao | pesquisador | especialista
+	Role            string `json:"role"` // artesao | pesquisador | especialista | estudante | agente_territorial
 	Profissao       string `json:"profissao"`
+	Curso           string `json:"curso"` // obrigatório se role=estudante (salvo em Profissao)
 	Bioma           string `json:"bioma"`
 	LocalEncontro   string `json:"local_encontro"`
 	Experiencia     string `json:"experiencia"`
@@ -71,6 +72,12 @@ func Cadastro(c *gin.Context) {
 		return
 	}
 
+	// Estudante precisa informar o curso
+	if input.Role == "estudante" && input.Curso == "" {
+		utils.Error(c, 400, "Informe o curso que está estudando")
+		return
+	}
+
 	// Verifica se e-mail já existe
 	var existe models.Usuario
 	if result := database.DB.Where("email = ?", input.Email).First(&existe); result.Error == nil {
@@ -87,10 +94,15 @@ func Cadastro(c *gin.Context) {
 
 	// Define role
 	role := models.RoleArtesao
-	if input.Role == "pesquisador" {
+	switch input.Role {
+	case "pesquisador":
 		role = models.RolePesquisador
-	} else if input.Role == "especialista" {
+	case "especialista":
 		role = models.RoleEspecialista
+	case "estudante":
+		role = models.RoleEstudante
+	case "agente_territorial":
+		role = models.RoleAgenteTerritorial
 	}
 
 	// Converte data de nascimento se informada
@@ -101,6 +113,12 @@ func Cadastro(c *gin.Context) {
 			utils.Error(c, 400, "Formato de data inválido. Use: AAAA-MM-DD (ex: 1990-05-20)")
 			return
 		}
+	}
+
+	// Estudante guarda o curso no campo Profissao
+	profissao := input.Profissao
+	if input.Role == "estudante" {
+		profissao = input.Curso
 	}
 
 	usuario := models.Usuario{
@@ -122,7 +140,7 @@ func Cadastro(c *gin.Context) {
 		Bairro:    input.Bairro,
 
 		// Atuação
-		Profissao:       input.Profissao,
+		Profissao:       profissao,
 		Bioma:           input.Bioma,
 		LocalEncontro:   input.LocalEncontro,
 		Experiencia:     input.Experiencia,
