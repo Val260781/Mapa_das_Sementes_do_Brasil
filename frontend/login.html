@@ -21,46 +21,76 @@
 
   <!-- Formulário de login -->
   <div class="auth-wrapper">
-    <div class="card auth-card">
-      <h1 class="auth-card__titulo">Bem-vindo de volta 🌿</h1>
-      <p class="auth-card__subtitulo">
-        Entre com sua conta para acessar o mapa e os registros.
-      </p>
+    <div class="auth-split">
 
-      <form id="form-login" novalidate>
-        <div class="form-grupo">
-          <label for="email">E-mail</label>
-          <input
-            type="email"
-            id="email"
-            placeholder="seu@email.com"
-            autocomplete="email"
-            required
-          />
-        </div>
+      <!-- Ilustração -->
+      <div class="auth-ilustracao" aria-hidden="true">
+        <svg viewBox="0 0 500 500" width="100%" height="100%">
+          <rect x="0" y="0" width="500" height="500" fill="#1b4332"/>
+          <circle cx="250" cy="250" r="200" fill="#2d6a4f"/>
+          <ellipse cx="250" cy="430" rx="220" ry="60" fill="#1b4332"/>
+          <path fill="#40916c" d="M30 430 Q250 380 470 430 L470 500 L30 500 Z"/>
+          <path fill="none" stroke="#95d5b2" stroke-width="6" stroke-linecap="round" d="M250 420 L250 300"/>
+          <path fill="#74c69d" d="M250 320 Q200 300 195 250 Q235 260 250 310 Z"/>
+          <path fill="#52b788" d="M250 320 Q300 300 305 250 Q265 260 250 310 Z"/>
+          <path fill="#95d5b2" d="M250 300 Q215 270 220 230 Q255 250 250 300 Z"/>
+          <path fill="#74c69d" d="M250 300 Q285 270 280 230 Q245 250 250 300 Z"/>
+          <ellipse cx="250" cy="430" rx="38" ry="14" fill="#7f5539"/>
+          <circle cx="180" cy="350" r="6" fill="#95d5b2" opacity="0.6"/>
+          <circle cx="320" cy="370" r="8" fill="#95d5b2" opacity="0.5"/>
+          <circle cx="150" cy="280" r="5" fill="#95d5b2" opacity="0.4"/>
+          <circle cx="350" cy="260" r="6" fill="#95d5b2" opacity="0.4"/>
+          <circle cx="120" cy="200" r="4" fill="#95d5b2" opacity="0.3"/>
+          <circle cx="380" cy="180" r="5" fill="#95d5b2" opacity="0.3"/>
+        </svg>
+        <p class="auth-ilustracao__frase">
+          Cada semente carrega uma história. Ajude a contar a do Brasil.
+        </p>
+      </div>
 
-        <div class="form-grupo">
-          <label for="senha">Senha</label>
-          <input
-            type="password"
-            id="senha"
-            placeholder="••••••••"
-            autocomplete="current-password"
-            required
-          />
-        </div>
+      <!-- Formulário -->
+      <div class="card auth-card">
+        <h1 class="auth-card__titulo">Bem-vindo de volta 🌿</h1>
+        <p class="auth-card__subtitulo">
+          Entre com sua conta para acessar o mapa e os registros.
+        </p>
 
-        <div id="msg-login" class="msg msg--erro"></div>
+        <form id="form-login" novalidate>
+          <div class="form-grupo">
+            <label for="email">E-mail</label>
+            <input
+              type="email"
+              id="email"
+              placeholder="seu@email.com"
+              autocomplete="email"
+              required
+            />
+          </div>
 
-        <button type="submit" class="btn btn--primario btn--bloco mt-2" id="btn-login">
-          Entrar
-        </button>
-      </form>
+          <div class="form-grupo">
+            <label for="senha">Senha</label>
+            <input
+              type="password"
+              id="senha"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+          </div>
 
-      <p class="auth-card__rodape">
-        Não tem conta?
-        <a href="/frontend/cadastro.html">Cadastre-se gratuitamente</a>
-      </p>
+          <div id="msg-login" class="msg msg--erro"></div>
+
+          <button type="submit" class="btn btn--primario btn--bloco mt-2" id="btn-login">
+            Entrar
+          </button>
+        </form>
+
+        <p class="auth-card__rodape">
+          Não tem conta?
+          <a href="/frontend/cadastro.html">Cadastre-se gratuitamente</a>
+        </p>
+      </div>
+
     </div>
   </div>
 
