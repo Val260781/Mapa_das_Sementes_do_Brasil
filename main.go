@@ -20,11 +20,15 @@ func main() {
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware())
 	r.Static("/uploads", "./uploads")
+	r.Static("/frontend", "./frontend")
+	r.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusFound, "/frontend/index.html")
+	})
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "ok",
-			"message": "🌱 Mapa das Sementes do Brasil — API rodando!",
+			"message": " Mapa das Sementes do Brasil — API rodando!",
 		})
 	})
 
@@ -118,4 +122,3 @@ func main() {
 		log.Fatalf("Erro ao iniciar servidor: %v", err)
 	}
 }
-
