@@ -307,9 +307,69 @@ a:hover {
   padding: 2rem 1rem;
 }
 
+.auth-split {
+  display: flex;
+  width: 100%;
+  max-width: 900px;
+  border-radius: var(--raio-lg);
+  overflow: hidden;
+  box-shadow: var(--sombra);
+}
+
+.auth-ilustracao {
+  flex: 1;
+  min-width: 300px;
+  background: #1b4332;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.auth-ilustracao svg {
+  max-width: 280px;
+}
+
+.auth-ilustracao__frase {
+  color: var(--verde-suave);
+  font-size: 0.95rem;
+  text-align: center;
+  margin-top: 1.5rem;
+  max-width: 240px;
+  line-height: 1.6;
+}
+
+.auth-split .auth-card {
+  flex: 1;
+  min-width: 320px;
+  box-shadow: none;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Auth card usado sozinho (sem o split com ilustração), ex: cadastro.html */
 .auth-card {
   width: 100%;
   max-width: 440px;
+}
+
+@media (max-width: 700px) {
+  .auth-split {
+    flex-direction: column;
+  }
+  .auth-ilustracao {
+    padding: 1.5rem;
+  }
+  .auth-ilustracao svg {
+    max-width: 160px;
+  }
+  .auth-ilustracao__frase {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+  }
 }
 
 .auth-card__titulo {
