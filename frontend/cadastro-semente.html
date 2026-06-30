@@ -586,6 +586,51 @@
       if (estado) el.classList.add(estado);
     }
 
+    /**
+     * Busca uma espécie pelo nome científico exato. Se já existir, reaproveita
+     * o ID — evita o erro de chave duplicada, já que "nome_cientifico" tem
+     * restrição de unicidade no banco. Se não existir, cria uma nova.
+     * @param {string} nomeCientifico
+     * @param {object} dadosCompletos - usados apenas se for preciso criar
+     * @returns {Promise<number>} ID da espécie (existente ou recém-criada)
+     */
+    async function obterOuCriarEspecie(nomeCientifico, dadosCompletos) {
+      try {
+        const resposta = await apiListarEspecies();
+        const lista = resposta.especies || resposta.data || resposta;
+
+        if (Array.isArray(lista)) {
+          const existente = lista.find(
+            e => (e.nome_cientifico || '').trim().toLowerCase() === nomeCientifico.trim().toLowerCase()
+          );
+          if (existente) {
+            exibirMensagem('msg-progresso', `🌿 Espécie já existente reaproveitada: ${existente.nome_popular || nomeCientifico}`, 'sucesso');
+            return existente.ID || existente.id;
+          }
+        }
+      } catch (err) {
+        // Se a busca falhar por algum motivo, segue para tentar criar normalmente
+      }
+
+      exibirMensagem('msg-progresso', '🌿 Cadastrando nova espécie...', 'sucesso');
+      try {
+        const especie = await apiCriarEspecie(dadosCompletos);
+        return especie.especie?.ID || especie.especie?.id || especie.ID || especie.id;
+      } catch (err) {
+        // Corrida: outra pessoa pode ter cadastrado a mesma espécie entre a busca e a criação.
+        // Nesse caso específico, tenta buscar de novo antes de desistir.
+        if ((err.message || '').toLowerCase().includes('duplicate') || (err.message || '').includes('23505')) {
+          const resposta = await apiListarEspecies();
+          const lista = resposta.especies || resposta.data || resposta;
+          const existente = (lista || []).find(
+            e => (e.nome_cientifico || '').trim().toLowerCase() === nomeCientifico.trim().toLowerCase()
+          );
+          if (existente) return existente.ID || existente.id;
+        }
+        throw err;
+      }
+    }
+
     // --- Envio do formulário: orquestra Espécie → Semente → Registro → Fotos ---
     const form = document.getElementById('form-semente');
     const btnEnviar = document.getElementById('btn-enviar');
@@ -611,10 +656,11 @@
       estadoBotao(btnEnviar, true);
 
       try {
-        // 1) Espécie
+        // 1) Espécie — busca por nome científico exato antes de criar,
+        // já que "nome_cientifico" tem restrição de unicidade no banco.
         marcarEtapa(1, 'ativa');
-        exibirMensagem('msg-progresso', '🌿 Cadastrando espécie...', 'sucesso');
-        const especie = await apiCriarEspecie({
+        exibirMensagem('msg-progresso', '🌿 Verificando espécie...', 'sucesso');
+        const especieId = await obterOuCriarEspecie(campos.nome_cientifico, {
           nome_popular: campos.nome_popular,
           nome_cientifico: campos.nome_cientifico,
           familia: document.getElementById('familia').value.trim(),
@@ -623,7 +669,6 @@
           usos_artesanais: document.getElementById('usos_artesanais_especie').value.trim(),
           epoca_colheita: document.getElementById('epoca_colheita').value.trim(),
         });
-        const especieId = especie.especie?.ID || especie.especie?.id || especie.ID || especie.id;
         marcarEtapa(1, 'concluida');
 
         // 2) Semente
