@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastrar Semente — Mapa das Sementes do Brasil</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .form-secao {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--terra-escura);
+    }
+    .form-secao:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 1rem;
+    }
+    .form-secao__titulo {
+      color: var(--verde-escuro);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .form-linha {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 600px) {
+      .form-linha { grid-template-columns: 1fr; }
+    }
+    .upload-area {
+      border: 2px dashed var(--terra-escura);
+      border-radius: var(--raio-lg);
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transicao), background-color var(--transicao);
+    }
+    .upload-area:hover,
+    .upload-area.arrastando {
+      border-color: var(--verde-medio);
+      background: var(--verde-suave);
+    }
+    .upload-area__icone {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .upload-area__texto {
+      color: var(--texto-suave);
+      font-size: 0.9rem;
+    }
+    .upload-area__contador {
+      color: var(--verde-escuro);
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-top: 0.4rem;
+    }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 0.8rem;
+      margin-top: 1.2rem;
+    }
+    .preview-item {
+      position: relative;
+      border-radius: var(--raio);
+      overflow: hidden;
+      aspect-ratio: 1;
+      box-shadow: var(--sombra);
+    }
+    .preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .preview-item__remover {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-item__remover:hover {
+      background: var(--erro);
+    }
+    .progresso-etapas {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .progresso-etapa {
+      flex: 1;
+      min-width: 100px;
+      padding: 0.5rem;
+      text-align: center;
+      border-radius: var(--raio);
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: var(--terra-escura);
+      color: var(--texto-suave);
+    }
+    .progresso-etapa.ativa {
+      background: var(--verde-claro);
+      color: var(--branco);
+    }
+    .progresso-etapa.concluida {
+      background: var(--verde-escuro);
+      color: var(--branco);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a class="navbar__logo" href="/frontend/index.html">
+      🌱 <span>Mapa das Sementes</span> do Brasil
+    </a>
+    <ul class="navbar__nav">
+      <li><a href="/frontend/index.html">Início</a></li>
+      <li><a href="#" id="link-sair">Sair</a></li>
+    </ul>
+  </nav>
+
+  <div class="container" style="max-width: 760px; padding-top: 2rem; padding-bottom: 3rem;">
+
+    <h1 style="color: var(--verde-escuro); font-size: 1.6rem;">
+      🌳 Cadastrar nova semente
+    </h1>
+    <p style="color: var(--texto-suave); margin-top: 0.3rem; margin-bottom: 1.5rem;">
+      Registre uma espécie, a semente coletada, o local do encontro e fotos.
+    </p>
+
+    <!-- Indicador de progresso (visual, envio é único) -->
+    <div class="progresso-etapas">
+      <div class="progresso-etapa ativa" id="etapa-1">1. Espécie e semente</div>
+      <div class="progresso-etapa" id="etapa-2">2. Localização</div>
+      <div class="progresso-etapa" id="etapa-3">3. Fotos</div>
+    </div>
+
+    <form id="form-semente" class="card" novalidate>
+
+      <!-- ============ ESPÉCIE ============ -->
+      <div class="form-secao">
+        <div class="form-secao__titulo">🌿 Dados da espécie</div>
+
+        <div class="form-linha">
+          <div class="form-grupo">
+            <label for="nome_popular">Nome popular</label>
+            <input type="text" id="nome_popular" placeholder="Ex: Pequi" required />
+          </div>
+          <div class="form-grupo">
+            <label for="nome_cientifico">Nome científico</label>
+            <input type="text" id="nome_cientifico" placeholder="Ex: Caryocar brasiliense" required />
+          </div>
+        </div>
+
+        <div class="form-linha">
+          <div class="form-grupo">
+            <label for="familia">Família botânica</label>
+            <input type="text" id="familia" placeholder="Ex: Caryocaraceae" />
+          </div>
+          <div class="form-grupo">
+            <label for="bioma">Bioma</label>
+            <select id="bioma">
+              <option value="">Selecione...</option>
+              <option value="Cerrado">Cerrado</option>
+              <option value="Amazônia">Amazônia</option>
+              <option value="Caatinga">Caatinga</option>
+              <option value="Mata Atlântica">Mata Atlântica</option>
+              <option value="Pampa">Pampa</option>
+              <option value="Pantanal">Pantanal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grupo">
+          <label for="descricao_especie">Descrição da espécie</label>
+          <textarea id="descricao_especie" rows="3" placeholder="Características gerais, usos, importância ecológica..."></textarea>
+        </div>
+
+        <div class="form-linha">
+          <div class="form-grupo">
+            <label for="usos_artesanais_especie">Usos artesanais</label>
+            <input type="text" id="usos_artesanais_especie" placeholder="Ex: Biojoias, tingimento" />
+          </div>
+          <div class="form-grupo">
+            <label for="epoca_colheita">Época de colheita</label>
+            <input type="text" id="epoca_colheita" placeholder="Ex: Setembro a Janeiro" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ SEMENTE ============ -->
+      <div class="form-secao">
+        <div class="form-secao__titulo">🌱 Dados da semente</div>
+
+        <div class="form-grupo">
+          <label for="nome_semente">Nome/identificação da semente</label>
+          <input type="text" id="nome_semente" placeholder="Ex: Pequi do Cerrado" required />
+        </div>
+
+        <div class="form-linha">
+          <div class="form-grupo">
+            <label for="cor">Cor</label>
+            <input type="text" id="cor" placeholder="Ex: Amarelo-claro" />
+          </div>
+          <div class="form-grupo">
+            <label for="tamanho">Tamanho</label>
+            <input type="text" id="tamanho" placeholder="Ex: Médio" />
+          </div>
+        </div>
+
+        <div class="form-linha">
+          <div class="form-grupo">
+            <label for="textura">Textura</label>
+            <input type="text" id="textura" placeholder="Ex: Lisa, rugosa" />
+          </div>
+          <div class="form-grupo">
+            <label for="tecnicas_artesanato">Técnicas de artesanato</label>
+            <input type="text" id="tecnicas_artesanato" placeholder="Ex: Lixamento, perfuração" />
+          </div>
+        </div>
+
+        <div class="form-grupo">
+          <label for="usos_artesanais_semente">Usos artesanais da semente</label>
+          <textarea id="usos_artesanais_semente" rows="2" placeholder="Como a semente é utilizada no artesanato..."></textarea>
+        </div>
+
+        <div class="form-grupo">
+          <label for="descricao_semente">Descrição da coleta</label>
+          <textarea id="descricao_semente" rows="2" placeholder="Detalhes sobre a coleta..."></textarea>
+        </div>
+      </div>
+
+      <!-- ============ LOCALIZAÇÃO ============ -->
+      <div class="form-secao">
+        <div class="form-secao__titulo">📍 Localização do registro</div>
+
+        <div class="form-linha">
+          <div class="form-grupo">
+            <label for="latitude">Latitude</label>
+            <input type="number" step="any" id="latitude" placeholder="Ex: -16.6869" required />
+          </div>
+          <div class="form-grupo">
+            <label for="longitude">Longitude</label>
+            <input type="number" step="any" id="longitude" placeholder="Ex: -49.2648" required />
+          </div>
+        </div>
+
+        <button type="button" class="btn btn--secundario" id="btn-localizacao" style="margin-bottom: 1.2rem;">
+          📡 Usar minha localização atual
+        </button>
+
+        <div class="form-linha">
+          <div class="form-grupo">
+            <label for="estado">Estado (UF)</label>
+            <input type="text" id="estado" maxlength="2" placeholder="Ex: GO" style="text-transform: uppercase;" />
+          </div>
+          <div class="form-grupo">
+            <label for="municipio">Município</label>
+            <input type="text" id="municipio" placeholder="Ex: Goiânia" />
+          </div>
+        </div>
+
+        <div class="form-linha">
+          <div class="form-grupo">
+            <label for="quantidade">Quantidade coletada</label>
+            <input type="number" id="quantidade" min="1" placeholder="Ex: 5" />
+          </div>
+          <div class="form-grupo">
+            <label for="data_coleta">Data da coleta</label>
+            <input type="date" id="data_coleta" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ FOTOS ============ -->
+      <div class="form-secao">
+        <div class="form-secao__titulo">📷 Fotos (até 5 imagens)</div>
+
+        <div class="upload-area" id="upload-area">
+          <div class="upload-area__icone">📤</div>
+          <div class="upload-area__texto">
+            Clique para escolher fotos ou arraste aqui<br>
+            <small>JPG, PNG — máximo 5 fotos, até 5MB cada</small>
+          </div>
+          <div class="upload-area__contador" id="contador-fotos">0 de 5 fotos selecionadas</div>
+        </div>
+        <input type="file" id="input-fotos" accept="image/*" multiple class="oculto" />
+
+        <div class="preview-grid" id="preview-grid"></div>
+
+        <div class="form-grupo mt-3">
+          <label for="legenda_fotos">Legenda das fotos (opcional)</label>
+          <input type="text" id="legenda_fotos" placeholder="Ex: Pequi coletado em área de cerrado nativo" />
+        </div>
+      </div>
+
+      <div id="msg-semente" class="msg msg--erro"></div>
+      <div id="msg-progresso" class="msg msg--sucesso"></div>
+
+      <button type="submit" class="btn btn--primario btn--bloco mt-2" id="btn-enviar">
+        Cadastrar semente
+      </button>
+    </form>
+
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    exigirLogin();
+
+    document.getElementById('link-sair').addEventListener('click', (e) => {
+      e.preventDefault();
+      encerrarSessao();
+    });
+
+    // --- Upload de fotos: estado e interações ---
+    const MAX_FOTOS = 5;
+    let fotosSelecionadas = [];
+
+    const uploadArea   = document.getElementById('upload-area');
+    const inputFotos   = document.getElementById('input-fotos');
+    const previewGrid  = document.getElementById('preview-grid');
+    const contadorFotos = document.getElementById('contador-fotos');
+
+    uploadArea.addEventListener('click', () => inputFotos.click());
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('arrastando');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('arrastando');
+    });
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('arrastando');
+      adicionarFotos(Array.from(e.dataTransfer.files));
+    });
+
+    inputFotos.addEventListener('change', (e) => {
+      adicionarFotos(Array.from(e.target.files));
+      inputFotos.value = ''; // permite re-selecionar o mesmo arquivo depois de remover
+    });
+
+    function adicionarFotos(novosArquivos) {
+      const TAMANHO_MAX_MB = 5;
+      const TAMANHO_MAX_BYTES = TAMANHO_MAX_MB * 1024 * 1024;
+
+      const imagens = novosArquivos.filter(f => f.type.startsWith('image/'));
+      const espacoDisponivel = MAX_FOTOS - fotosSelecionadas.length;
+
+      if (espacoDisponivel <= 0) {
+        exibirMensagem('msg-semente', `Limite de ${MAX_FOTOS} fotos atingido.`, 'erro');
+        return;
+      }
+
+      const validas = [];
+      const rejeitadas = [];
+      for (const arquivo of imagens.slice(0, espacoDisponivel)) {
+        if (arquivo.size > TAMANHO_MAX_BYTES) {
+          rejeitadas.push(arquivo.name);
+        } else {
+          validas.push(arquivo);
+        }
+      }
+
+      fotosSelecionadas.push(...validas);
+      renderizarPreview();
+
+      if (rejeitadas.length > 0) {
+        exibirMensagem('msg-semente', `Foto(s) muito grande(s) (máx. ${TAMANHO_MAX_MB}MB): ${rejeitadas.join(', ')}`, 'erro');
+      } else {
+        ocultarMensagem('msg-semente');
+      }
+    }
+
+    function removerFoto(index) {
+      fotosSelecionadas.splice(index, 1);
+      renderizarPreview();
+    }
+
+    function renderizarPreview() {
+      previewGrid.innerHTML = '';
+      fotosSelecionadas.forEach((arquivo, index) => {
+        const url = URL.createObjectURL(arquivo);
+        const item = document.createElement('div');
+        item.className = 'preview-item';
+        item.innerHTML = `
+          <img src="${url}" alt="Pré-visualização ${index + 1}" />
+          <button type="button" class="preview-item__remover" aria-label="Remover foto">×</button>
+        `;
+        item.querySelector('.preview-item__remover').addEventListener('click', () => removerFoto(index));
+        previewGrid.appendChild(item);
+      });
+      contadorFotos.textContent = `${fotosSelecionadas.length} de ${MAX_FOTOS} fotos selecionadas`;
+    }
+
+    // --- Geolocalização ---
+    document.getElementById('btn-localizacao').addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        exibirMensagem('msg-semente', 'Geolocalização não suportada neste navegador.', 'erro');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
+        },
+        () => {
+          exibirMensagem('msg-semente', 'Não foi possível obter sua localização.', 'erro');
+        }
+      );
+    });
+
+    // --- Indicador visual de progresso (puramente decorativo) ---
+    function marcarEtapa(numero, estado) {
+      const el = document.getElementById(`etapa-${numero}`);
+      el.classList.remove('ativa', 'concluida');
+      if (estado) el.classList.add(estado);
+    }
+
+    // --- Envio do formulário: orquestra Espécie → Semente → Registro → Fotos ---
+    const form = document.getElementById('form-semente');
+    const btnEnviar = document.getElementById('btn-enviar');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      ocultarMensagem('msg-semente');
+      ocultarMensagem('msg-progresso');
+
+      const campos = {
+        nome_popular: document.getElementById('nome_popular').value.trim(),
+        nome_cientifico: document.getElementById('nome_cientifico').value.trim(),
+        nome_semente: document.getElementById('nome_semente').value.trim(),
+        latitude: document.getElementById('latitude').value,
+        longitude: document.getElementById('longitude').value,
+      };
+
+      if (!campos.nome_popular || !campos.nome_cientifico || !campos.nome_semente || !campos.latitude || !campos.longitude) {
+        exibirMensagem('msg-semente', 'Preencha os campos obrigatórios: nome popular, nome científico, nome da semente, latitude e longitude.', 'erro');
+        return;
+      }
+
+      estadoBotao(btnEnviar, true);
+
+      try {
+        // 1) Espécie
+        marcarEtapa(1, 'ativa');
+        exibirMensagem('msg-progresso', '🌿 Cadastrando espécie...', 'sucesso');
+        const especie = await apiCriarEspecie({
+          nome_popular: campos.nome_popular,
+          nome_cientifico: campos.nome_cientifico,
+          familia: document.getElementById('familia').value.trim(),
+          bioma: document.getElementById('bioma').value,
+          descricao: document.getElementById('descricao_especie').value.trim(),
+          usos_artesanais: document.getElementById('usos_artesanais_especie').value.trim(),
+          epoca_colheita: document.getElementById('epoca_colheita').value.trim(),
+        });
+        const especieId = especie.especie?.ID || especie.especie?.id || especie.ID || especie.id;
+        marcarEtapa(1, 'concluida');
+
+        // 2) Semente
+        exibirMensagem('msg-progresso', '🌱 Cadastrando semente...', 'sucesso');
+        const semente = await apiCriarSemente({
+          especie_id: especieId,
+          nome: campos.nome_semente,
+          descricao: document.getElementById('descricao_semente').value.trim(),
+          cor: document.getElementById('cor').value.trim(),
+          tamanho: document.getElementById('tamanho').value.trim(),
+          textura: document.getElementById('textura').value.trim(),
+          usos_artesanais: document.getElementById('usos_artesanais_semente').value.trim(),
+          tecnicas_artesanato: document.getElementById('tecnicas_artesanato').value.trim(),
+        });
+        const sementeId = semente.semente?.ID || semente.semente?.id || semente.ID || semente.id;
+
+        // 3) Registro (localização)
+        marcarEtapa(2, 'ativa');
+        exibirMensagem('msg-progresso', '📍 Salvando localização...', 'sucesso');
+        const registro = await apiCriarRegistro({
+          semente_id: sementeId,
+          latitude: parseFloat(campos.latitude),
+          longitude: parseFloat(campos.longitude),
+          estado: document.getElementById('estado').value.trim().toUpperCase(),
+          municipio: document.getElementById('municipio').value.trim(),
+          quantidade: parseInt(document.getElementById('quantidade').value) || 0,
+          data_coleta: document.getElementById('data_coleta').value,
+        });
+        const registroId = registro.ID || registro.id;
+        marcarEtapa(2, 'concluida');
+
+        // 4) Fotos (se houver)
+        marcarEtapa(3, 'ativa');
+        if (fotosSelecionadas.length > 0) {
+          exibirMensagem('msg-progresso', `📷 Enviando ${fotosSelecionadas.length} foto(s)...`, 'sucesso');
+          const legenda = document.getElementById('legenda_fotos').value.trim();
+          await apiUploadFotosRegistro(registroId, fotosSelecionadas, legenda);
+        }
+        marcarEtapa(3, 'concluida');
+
+        exibirMensagem('msg-progresso', '✅ Semente cadastrada com sucesso! Aguardando validação por um especialista.', 'sucesso');
+        form.reset();
+        fotosSelecionadas = [];
+        renderizarPreview();
+        ['etapa-1', 'etapa-2', 'etapa-3'].forEach(id => document.getElementById(id).classList.remove('ativa', 'concluida'));
+        document.getElementById('etapa-1').classList.add('ativa');
+
+      } catch (err) {
+        ocultarMensagem('msg-progresso');
+        exibirMensagem('msg-semente', err.message || 'Erro ao cadastrar. Tente novamente.', 'erro');
+      } finally {
+        estadoBotao(btnEnviar, false, 'Cadastrar semente');
+      }
+    });
+  </script>
+
+</body>
+</html>
