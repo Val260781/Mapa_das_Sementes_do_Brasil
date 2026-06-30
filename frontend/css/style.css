@@ -221,10 +221,27 @@ a:hover {
 
 /* --- Hero (página inicial) --- */
 .hero {
+  position: relative;
   background: linear-gradient(135deg, var(--verde-escuro) 0%, var(--verde-medio) 100%);
   color: var(--branco);
   padding: 5rem 1.5rem;
   text-align: center;
+  overflow: hidden;
+}
+
+/* Mapa do Brasil estilizado como marca d'água de fundo */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cpath fill='%23ffffff' opacity='0.10' d='M20 60 Q20 30 45 20 Q55 45 40 65 Q30 75 20 60 Z'/%3E%3Ccircle cx='85' cy='30' r='7' fill='%23ffffff' opacity='0.10'/%3E%3Ccircle cx='95' cy='32' r='5' fill='%23ffffff' opacity='0.08'/%3E%3Cpath fill='%23ffffff' opacity='0.09' d='M70 90 Q70 70 90 62 Q98 82 85 96 Q78 102 70 90 Z'/%3E%3Ccircle cx='30' cy='100' r='6' fill='%23ffffff' opacity='0.08'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+}
+
+.hero > .container {
+  position: relative;
+  z-index: 1;
 }
 
 .hero__titulo {
