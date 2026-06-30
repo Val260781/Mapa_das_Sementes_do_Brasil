@@ -165,7 +165,19 @@
         window.location.href = '/frontend/index.html';
 
       } catch (err) {
-        exibirMensagem('msg-cadastro', err.message || 'Erro ao criar conta.', 'erro');
+        const mensagem = err.message || 'Erro ao criar conta.';
+
+        // E-mail já cadastrado — sugere ir direto para o login
+        if (mensagem.toLowerCase().includes('já cadastrado')) {
+          exibirMensagemComLink(
+            'msg-cadastro',
+            'Este e-mail já está cadastrado.',
+            '/frontend/login.html',
+            'Fazer login'
+          );
+        } else {
+          exibirMensagem('msg-cadastro', mensagem, 'erro');
+        }
       } finally {
         estadoBotao(btn, false, 'Criar minha conta');
       }
