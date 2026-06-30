@@ -65,6 +65,62 @@
       padding: 3rem 1rem;
       color: var(--texto-suave);
     }
+    .btn-acao {
+      border: none;
+      background: var(--terra-escura);
+      color: var(--texto);
+      padding: 0.35rem 0.7rem;
+      border-radius: var(--raio);
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-right: 0.3rem;
+      transition: background-color var(--transicao);
+    }
+    .btn-acao--editar:hover {
+      background: var(--verde-suave);
+    }
+    .btn-acao--excluir:hover {
+      background: #fdecea;
+      color: var(--erro);
+    }
+    .modal-fundo {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 100;
+    }
+    .modal-card {
+      background: var(--branco);
+      border-radius: var(--raio-lg);
+      padding: 2rem;
+      max-width: 480px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-card__titulo {
+      color: var(--verde-escuro);
+      font-size: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+    .modal-card__acoes {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1.5rem;
+    }
+    .modal-card__acoes .btn {
+      flex: 1;
+    }
+    .form-dica {
+      font-size: 0.78rem;
+      color: var(--texto-suave);
+      margin-top: -0.8rem;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -116,6 +172,60 @@
       <a href="/frontend/index.html" class="btn btn--primario mt-3">Voltar ao início</a>
     </div>
 
+  </div>
+
+  <!-- Modal de edição de usuário -->
+  <div id="modal-edicao" class="modal-fundo oculto">
+    <div class="modal-card">
+      <h2 class="modal-card__titulo">✏️ Editar usuário</h2>
+
+      <form id="form-edicao">
+        <input type="hidden" id="edicao-id" />
+
+        <div class="form-grupo">
+          <label for="edicao-nome">Nome completo</label>
+          <input type="text" id="edicao-nome" />
+        </div>
+
+        <div class="form-grupo">
+          <label for="edicao-email">E-mail</label>
+          <input type="email" id="edicao-email" />
+        </div>
+
+        <div class="form-grupo">
+          <label for="edicao-telefone">Telefone</label>
+          <input type="text" id="edicao-telefone" />
+        </div>
+
+        <div class="form-grupo">
+          <label for="edicao-role">Perfil</label>
+          <select id="edicao-role">
+            <option value="artesao">Artesão(ã)</option>
+            <option value="pesquisador">Pesquisador(a)</option>
+            <option value="especialista">Especialista</option>
+            <option value="estudante">Estudante</option>
+            <option value="agente_territorial">Agente Territorial Cultural</option>
+            <option value="admin">Administrador(a)</option>
+          </select>
+        </div>
+
+        <div class="form-grupo">
+          <label for="edicao-senha">Nova senha (reset)</label>
+          <input type="text" id="edicao-senha" placeholder="Deixe em branco para manter a senha atual" />
+        </div>
+        <div class="form-dica">
+          Preencha apenas se quiser redefinir a senha do usuário. Informe a senha
+          provisória e oriente a pessoa a alterá-la no primeiro acesso.
+        </div>
+
+        <div id="msg-edicao" class="msg msg--erro"></div>
+
+        <div class="modal-card__acoes">
+          <button type="button" class="btn btn--secundario" id="btn-cancelar-edicao">Cancelar</button>
+          <button type="submit" class="btn btn--primario" id="btn-salvar-edicao">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="js/api.js"></script>
@@ -197,6 +307,10 @@
           <td><span class="badge-role">${formatarPapel(u.role)}</span></td>
           <td>${escapeHtml(u.municipio || '—')}${u.estado ? ' - ' + escapeHtml(u.estado) : ''}</td>
           <td>${formatarData(u.created_at)}</td>
+          <td>
+            <button type="button" class="btn-acao btn-acao--editar" data-id="${u.id}">✏️ Editar</button>
+            <button type="button" class="btn-acao btn-acao--excluir" data-id="${u.id}" data-nome="${escapeHtml(u.nome_completo || u.email)}">🗑️</button>
+          </td>
         </tr>
       `).join('');
 
@@ -209,11 +323,20 @@
               <th>Perfil</th>
               <th>Localização</th>
               <th>Cadastrado em</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody>${linhas}</tbody>
         </table>
       `;
+
+      // Liga os eventos dos botões recém-criados
+      wrapper.querySelectorAll('.btn-acao--editar').forEach(btn => {
+        btn.addEventListener('click', () => abrirModalEdicao(btn.dataset.id));
+      });
+      wrapper.querySelectorAll('.btn-acao--excluir').forEach(btn => {
+        btn.addEventListener('click', () => confirmarExclusao(btn.dataset.id, btn.dataset.nome));
+      });
     }
 
     function formatarData(isoString) {
@@ -230,6 +353,84 @@
       const div = document.createElement('div');
       div.textContent = texto;
       return div.innerHTML;
+    }
+
+    // --- Modal de edição ---
+    const modalEdicao = document.getElementById('modal-edicao');
+    const formEdicao   = document.getElementById('form-edicao');
+    const btnSalvarEdicao = document.getElementById('btn-salvar-edicao');
+
+    function abrirModalEdicao(id) {
+      const usuario = todosUsuarios.find(u => String(u.id) === String(id));
+      if (!usuario) return;
+
+      document.getElementById('edicao-id').value = usuario.id;
+      document.getElementById('edicao-nome').value = usuario.nome_completo || '';
+      document.getElementById('edicao-email').value = usuario.email || '';
+      document.getElementById('edicao-telefone').value = usuario.telefone || '';
+      document.getElementById('edicao-role').value = usuario.role || 'artesao';
+      document.getElementById('edicao-senha').value = '';
+      ocultarMensagem('msg-edicao');
+
+      modalEdicao.classList.remove('oculto');
+    }
+
+    function fecharModalEdicao() {
+      modalEdicao.classList.add('oculto');
+    }
+
+    document.getElementById('btn-cancelar-edicao').addEventListener('click', fecharModalEdicao);
+    modalEdicao.addEventListener('click', (e) => {
+      if (e.target === modalEdicao) fecharModalEdicao();
+    });
+
+    formEdicao.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      ocultarMensagem('msg-edicao');
+
+      const id = document.getElementById('edicao-id').value;
+      const dados = {
+        nome_completo: document.getElementById('edicao-nome').value.trim(),
+        email: document.getElementById('edicao-email').value.trim(),
+        telefone: document.getElementById('edicao-telefone').value.trim(),
+        role: document.getElementById('edicao-role').value,
+      };
+
+      const novaSenha = document.getElementById('edicao-senha').value.trim();
+      if (novaSenha) {
+        if (novaSenha.length < 6) {
+          exibirMensagem('msg-edicao', 'A nova senha precisa ter ao menos 6 caracteres.', 'erro');
+          return;
+        }
+        dados.nova_senha = novaSenha;
+      }
+
+      estadoBotao(btnSalvarEdicao, true);
+
+      try {
+        await apiAdminEditarUsuario(id, dados);
+        fecharModalEdicao();
+        await carregarUsuarios(); // recarrega a lista com os dados atualizados
+      } catch (err) {
+        exibirMensagem('msg-edicao', err.message || 'Erro ao salvar alterações.', 'erro');
+      } finally {
+        estadoBotao(btnSalvarEdicao, false, 'Salvar alterações');
+      }
+    });
+
+    // --- Exclusão de usuário ---
+    async function confirmarExclusao(id, nome) {
+      const confirmado = window.confirm(
+        `Tem certeza que deseja excluir "${nome}"?\n\nEsta ação é permanente e o e-mail ficará disponível para um novo cadastro.`
+      );
+      if (!confirmado) return;
+
+      try {
+        await apiAdminExcluirUsuario(id);
+        await carregarUsuarios();
+      } catch (err) {
+        alert('Erro ao excluir usuário: ' + (err.message || 'tente novamente.'));
+      }
     }
   </script>
 
