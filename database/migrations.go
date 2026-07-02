@@ -12,7 +12,9 @@ func RunMigrations() {
 		&models.Especie{},
 		&models.Semente{},
 		&models.RegistroSemente{},
+		&models.FotoRegistro{},
 		&models.ConhecimentoTradicional{},
+		&models.Avaliacao{},
 	)
 
 	if err != nil {
