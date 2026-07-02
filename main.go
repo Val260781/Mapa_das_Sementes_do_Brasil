@@ -104,6 +104,8 @@ func main() {
 		// Avaliações
 		protegido.POST("/avaliacoes/especie/:id", handlers.AvaliarEspecie)
 		protegido.POST("/avaliacoes/semente/:id", handlers.AvaliarSemente)
+		protegido.POST("/avaliacoes/registro/:id", handlers.AvaliarRegistro)
+		protegido.POST("/avaliacoes/conhecimento/:id", handlers.AvaliarConhecimento)
 		protegido.GET("/avaliacoes/pendentes", handlers.ListarPendentes)
 		protegido.GET("/avaliacoes/historico", handlers.HistoricoAvaliacoes)
 
