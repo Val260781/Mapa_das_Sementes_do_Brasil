@@ -38,6 +38,12 @@ type Avaliacao struct {
 	SementeID *uint    `json:"semente_id,omitempty"`
 	Semente   *Semente `gorm:"foreignKey:SementeID" json:"semente,omitempty"`
 
+	RegistroID *uint            `json:"registro_id,omitempty"`
+	Registro   *RegistroSemente `gorm:"foreignKey:RegistroID" json:"registro,omitempty"`
+
+	ConhecimentoID *uint                    `json:"conhecimento_id,omitempty"`
+	Conhecimento   *ConhecimentoTradicional `gorm:"foreignKey:ConhecimentoID" json:"conhecimento,omitempty"`
+
 	// --- Resultado ---
 	Status  StatusAvaliacao `gorm:"size:20;not null" json:"status"`    // aprovada | reprovada
 	Parecer string          `gorm:"type:text;not null" json:"parecer"` // obrigatório: motivo técnico
