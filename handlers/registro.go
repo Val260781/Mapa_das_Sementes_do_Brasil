@@ -363,7 +363,7 @@ func UploadFotosRegistro(c *gin.Context) {
 		}
 
 		if err := database.DB.Create(&foto).Error; err != nil {
-			utils.Error(c, 500, "Erro ao salvar foto no banco")
+			utils.Error(c, 500, "Erro ao salvar foto no banco: "+err.Error())
 			return
 		}
 
