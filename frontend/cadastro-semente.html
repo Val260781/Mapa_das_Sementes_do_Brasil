@@ -778,7 +778,7 @@
           quantidade: parseInt(document.getElementById('quantidade').value) || 0,
           data_coleta: document.getElementById('data_coleta').value,
         });
-        const registroId = registro.ID || registro.id;
+        const registroId = registro.data?.ID || registro.data?.id || registro.ID || registro.id;
         marcarEtapa(2, 'concluida');
 
         // 4) Fotos (se houver)
