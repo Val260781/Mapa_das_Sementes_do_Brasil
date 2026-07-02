@@ -407,6 +407,46 @@ a:hover {
   to { transform: rotate(360deg); }
 }
 
+/* --- Modal (padrão global — usado em admin.html e painel-sementes.html) --- */
+.modal-fundo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+}
+.modal-card {
+  background: var(--branco);
+  border-radius: var(--raio-lg);
+  padding: 2rem;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-card__titulo {
+  color: var(--verde-escuro);
+  font-size: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+.modal-card__acoes {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+}
+.modal-card__acoes .btn {
+  flex: 1;
+}
+.form-dica {
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+  margin-top: -0.8rem;
+  margin-bottom: 1rem;
+}
+
 /* --- Utilitários --- */
 .mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
