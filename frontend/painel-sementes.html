@@ -150,6 +150,44 @@
 
   </div>
 
+  <!-- Modal de avaliação (aprovar/rejeitar com parecer) -->
+  <div id="modal-avaliacao" class="modal-fundo oculto">
+    <div class="modal-card">
+      <h2 class="modal-card__titulo" id="modal-avaliacao-titulo">📝 Avaliar registro</h2>
+
+      <form id="form-avaliacao">
+        <input type="hidden" id="avaliacao-id" />
+        <input type="hidden" id="avaliacao-status" />
+
+        <div class="form-grupo">
+          <label for="avaliacao-parecer">Parecer técnico *</label>
+          <textarea id="avaliacao-parecer" rows="3" placeholder="Explique o motivo da sua decisão..." required></textarea>
+        </div>
+
+        <div class="form-grupo oculto" id="grupo-recomendacao">
+          <label for="avaliacao-recomendacao">O que deve ser corrigido? *</label>
+          <textarea id="avaliacao-recomendacao" rows="3" placeholder="Obrigatório ao rejeitar — explique o que precisa ser ajustado"></textarea>
+        </div>
+
+        <div class="form-grupo">
+          <label for="avaliacao-fontes">Fontes bibliográficas (opcional)</label>
+          <input type="text" id="avaliacao-fontes" placeholder="Ex: livro, artigo científico, base de dados..." />
+        </div>
+        <div class="form-dica">
+          Seu parecer fica registrado no histórico de avaliações e, se rejeitado, a recomendação
+          de correção ajuda quem cadastrou a corrigir e reenviar.
+        </div>
+
+        <div id="msg-avaliacao" class="msg msg--erro"></div>
+
+        <div class="modal-card__acoes">
+          <button type="button" class="btn btn--secundario" id="btn-cancelar-avaliacao">Cancelar</button>
+          <button type="submit" class="btn btn--primario" id="btn-confirmar-avaliacao">Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="js/api.js"></script>
   <script>
     exigirLogin();
@@ -274,17 +312,78 @@
     }
 
     async function acaoRegistro(id, tipo) {
+      abrirModalAvaliacao(id, tipo === 'aprovar' ? 'aprovada' : 'reprovada');
+    }
+
+    /* -----------------------------------------------
+       Modal de avaliação (parecer)
+    ----------------------------------------------- */
+    const modalAvaliacao = document.getElementById('modal-avaliacao');
+    const formAvaliacao = document.getElementById('form-avaliacao');
+    const grupoRecomendacao = document.getElementById('grupo-recomendacao');
+    const campoRecomendacao = document.getElementById('avaliacao-recomendacao');
+
+    function abrirModalAvaliacao(id, status) {
+      formAvaliacao.reset();
+      ocultarMensagem('msg-avaliacao');
+
+      document.getElementById('avaliacao-id').value = id;
+      document.getElementById('avaliacao-status').value = status;
+
+      const ehReprovacao = status === 'reprovada';
+      document.getElementById('modal-avaliacao-titulo').textContent =
+        ehReprovacao ? '✕ Rejeitar registro' : '✓ Aprovar registro';
+
+      // Recomendação de correção só é exigida (e só faz sentido) ao rejeitar
+      grupoRecomendacao.classList.toggle('oculto', !ehReprovacao);
+      campoRecomendacao.required = ehReprovacao;
+
+      modalAvaliacao.classList.remove('oculto');
+    }
+
+    function fecharModalAvaliacao() {
+      modalAvaliacao.classList.add('oculto');
+    }
+
+    document.getElementById('btn-cancelar-avaliacao').addEventListener('click', fecharModalAvaliacao);
+    modalAvaliacao.addEventListener('click', (e) => {
+      if (e.target === modalAvaliacao) fecharModalAvaliacao();
+    });
+
+    formAvaliacao.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      ocultarMensagem('msg-avaliacao');
+
+      const id = document.getElementById('avaliacao-id').value;
+      const status = document.getElementById('avaliacao-status').value;
+      const parecer = document.getElementById('avaliacao-parecer').value.trim();
+      const recomendacao = campoRecomendacao.value.trim();
+      const fontes = document.getElementById('avaliacao-fontes').value.trim();
+
+      if (status === 'reprovada' && !recomendacao) {
+        exibirMensagem('msg-avaliacao', 'Informe o que deve ser corrigido.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirmar-avaliacao');
+      const textoOriginal = btn.textContent;
+      estadoBotao(btn, true);
+
       try {
-        if (tipo === 'aprovar') {
-          await apiValidarRegistro(id);
-        } else {
-          await apiRejeitarRegistro(id);
-        }
+        await apiAvaliarRegistro(id, {
+          status,
+          parecer,
+          recomendacao_correcao: recomendacao,
+          fontes_bibliograficas: fontes,
+        });
+        fecharModalAvaliacao();
         await carregarRegistros();
       } catch (err) {
-        alert('Erro: ' + (err.message || 'tente novamente.'));
+        exibirMensagem('msg-avaliacao', err.message || 'Erro ao registrar avaliação.');
+      } finally {
+        estadoBotao(btn, false, textoOriginal);
       }
-    }
+    });
 
     async function acaoExcluir(id, nome) {
       const confirmado = window.confirm(`Excluir o registro de "${nome}"? Esta ação é permanente.`);
