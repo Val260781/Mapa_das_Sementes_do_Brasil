@@ -310,6 +310,44 @@ async function apiValidarConhecimento(id) {
 }
 
 /* -----------------------------------------------
+   Avaliações (validação colaborativa com parecer)
+   dados = { status: 'aprovada'|'reprovada', parecer,
+             recomendacao_correcao, fontes_bibliograficas }
+----------------------------------------------- */
+
+async function apiAvaliarEspecie(id, dados) {
+  return await requisicao(`/api/avaliacoes/especie/${id}`, 'POST', dados);
+}
+
+async function apiAvaliarSemente(id, dados) {
+  return await requisicao(`/api/avaliacoes/semente/${id}`, 'POST', dados);
+}
+
+async function apiAvaliarRegistro(id, dados) {
+  return await requisicao(`/api/avaliacoes/registro/${id}`, 'POST', dados);
+}
+
+async function apiAvaliarConhecimento(id, dados) {
+  return await requisicao(`/api/avaliacoes/conhecimento/${id}`, 'POST', dados);
+}
+
+async function apiListarPendentes() {
+  return await requisicao('/api/avaliacoes/pendentes');
+}
+
+async function apiHistoricoAvaliacoes() {
+  return await requisicao('/api/avaliacoes/historico');
+}
+
+/* -----------------------------------------------
+   Administração — exclusão definitiva (somente admin)
+----------------------------------------------- */
+
+async function apiAdminExcluirRegistro(id) {
+  return await requisicao(`/api/admin/registros/${id}`, 'DELETE');
+}
+
+/* -----------------------------------------------
    Utilitários de UI
 ----------------------------------------------- */
 
